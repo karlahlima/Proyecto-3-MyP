@@ -2,8 +2,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-    - "80:80"
+    - "8080:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
-      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
     restart: unless-stopped
