@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tradinn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+ 
+<nav>
+  <a class="nav-logo" href="#">Trad<span>inn</span></a>
+  <div class="nav-links">
+    <a href="#categorias">Explorar</a>
+    <a href="#como-funciona">Cómo funciona</a>
+    <a href="#" onclick="openModal('login'); return false;" class="btn btn-outline">Ingresar</a>
+    <a href="#" onclick="openModal('register'); return false;" class="btn btn-solid">Registrarse</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-eyebrow">compra-venta</p>
+    <h1>Aquí algo<br/><em>chido</em> que no se me ocurrió</h1>
+    <p class="hero-desc">
+      ... Aquí explicación de la página ...
+    </p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-solid" onclick="openModal('register'); return false;">
+        Empezar → <!--flechita coqueta :D-->
+      </a>
+      <a href="#categorias" class="btn btn-outline">Ver productos</a>
+    </div>
+    <p class="hero-note">
+      <span>Con Google Authenticator</span> — Tus datos están seguros.
+    </p>
+  </div>
+  <div class="hero-right">
+    <div class="hero-card-stack">
+      <div class="product-card">
+        <div class="card-img">Imagen</div>
+        <p class="card-cat">Categoría</p>
+        <p class="card-name">Producto 1</p>
+        <div class="card-meta">
+          <span class="card-price">$$$</span>
+          <span class="stars">★★★★★</span>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="card-img">Imagen</div>
+        <p class="card-cat">Categoría</p>
+        <p class="card-name">Producto 2</p>
+        <div class="card-meta">
+          <span class="card-price">$$$</span>
+          <span class="stars">★★★★★</span>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="card-img">Imagen</div>
+        <p class="card-cat">Categoría</p>
+        <p class="card-name">Producto 3</p>
+        <div class="card-meta">
+          <span class="card-price">$$$</span>
+          <span class="stars">★★★★★</span> <!--☆ estrella vacía-->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span>Alimentos y Bebidas</span><span class="dot">●</span>
+    <span>Libros</span><span class="dot">●</span>
+    <span>Películas, Series de TV y Música</span><span class="dot">●</span>
+    <span>Electrónicos</span><span class="dot">●</span>
+    <span>Deportes</span><span class="dot">●</span>
+    <span>Hogar</span><span class="dot">●</span>
+    <span>Mascotas</span><span class="dot">●</span>
+    <span>Juguetes</span><span class="dot">●</span>
+    <span>Belleza</span><span class="dot">●</span>
+    <span>Moda</span><span class="dot">●</span>
+    <span>Automotriz</span><span class="dot">●</span>
+
+    <span>Alimentos y Bebidas</span><span class="dot">●</span>
+    <span>Libros</span><span class="dot">●</span>
+    <span>Películas, Series de TV y Música</span><span class="dot">●</span>
+    <span>Electrónicos</span><span class="dot">●</span>
+    <span>Deportes</span><span class="dot">●</span>
+    <span>Hogar</span><span class="dot">●</span>
+    <span>Mascotas</span><span class="dot">●</span>
+    <span>Juguetes</span><span class="dot">●</span>
+    <span>Belleza</span><span class="dot">●</span>
+    <span>Moda</span><span class="dot">●</span>
+    <span>Automotriz</span><span class="dot">●</span>
+
+    <span>Alimentos y Bebidas</span><span class="dot">●</span>
+    <span>Libros</span><span class="dot">●</span>
+    <span>Películas, Series de TV y Música</span><span class="dot">●</span>
+    <span>Electrónicos</span><span class="dot">●</span>
+    <span>Deportes</span><span class="dot">●</span>
+    <span>Hogar</span><span class="dot">●</span>
+    <span>Mascotas</span><span class="dot">●</span>
+    <span>Juguetes</span><span class="dot">●</span>
+    <span>Belleza</span><span class="dot">●</span>
+    <span>Moda</span><span class="dot">●</span>
+    <span>Automotriz</span><span class="dot">●</span>
+  </div>
+</div>
+ 
+<div class="stats">
+  <div class="stat-item">
+    <div class="stat-num">10<span>K</span></div>
+    <div class="stat-label">Usuarios activos</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">120<span>K</span></div>
+    <div class="stat-label">Productos publicados</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">99<span>%</span></div>
+    <div class="stat-label">Satisfacción</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">10<span>+</span></div>
+    <div class="stat-label">Categorías</div>
+  </div>
+</div>
+ 
+<section class="section" id="categorias">
+  <div class="section-header">
+    <div>
+      <p class="section-label">Explorar</p>
+      <h2>Todas las categorías</h2>
+    </div>
+    <a href="#" class="btn btn-outline">Ver todas →</a>
+  </div>
+  <div class="cats-grid">
+    <a href="#" class="cat-card">
+      <span class="cat-icon">Imágen</span>
+      <div class="cat-name">Categoría</div>
+      <div class="cat-count"># productos</div>
+    </a>
+    <a href="#" class="cat-card">
+      <span class="cat-icon">Imagen</span>
+      <div class="cat-name">Categoría</div>
+      <div class="cat-count"># productos</div>
+    </a>
+    <a href="#" class="cat-card">
+      <span class="cat-icon">Imagen</span>
+      <div class="cat-name">Categoría</div>
+      <div class="cat-count"># productos</div>
+    </a>
+    <a href="#" class="cat-card">
+      <span class="cat-icon">Imagen</span>
+      <div class="cat-name">Categoría</div>
+      <div class="cat-count"># productos</div>
+    </a>
+    <a href="#" class="cat-card">
+      <span class="cat-icon">Imagen</span>
+      <div class="cat-name">Categoría</div>
+      <div class="cat-count"># productos</div>
+    </a>
+  </div>
+</section>
+ 
+<section class="section products-section">
+  <div class="section-header">
+    <div>
+      <p class="section-label">Destacados</p>
+      <h2>Productos populares</h2>
+    </div>
+    <a href="#" class="btn btn-outline">Ver más →</a>
+  </div>
+  <div class="products-grid">
+    <a href="#" class="prod-card">
+      <div class="prod-img">Imagen</div>
+      <div class="prod-body">
+        <p class="prod-cat">Categoría</p>
+        <p class="prod-name">Producto 1</p>
+        <div class="prod-footer">
+          <span class="prod-price">$$$</span>
+          <span class="prod-stars">★★★★★</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="prod-card">
+      <div class="prod-img">Imagen</div>
+      <div class="prod-body">
+        <p class="prod-cat">Categoría</p>
+        <p class="prod-name">Producto 2</p>
+        <div class="prod-footer">
+          <span class="prod-price">$$$</span>
+          <span class="prod-stars">★★★★★</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="prod-card">
+      <div class="prod-img">Imagen</div>
+      <div class="prod-body">
+        <p class="prod-cat">Categoría</p>
+        <p class="prod-name">Producto 3</p>
+        <div class="prod-footer">
+          <span class="prod-price">$$$</span>
+          <span class="prod-stars">★★★★★</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="prod-card">
+      <div class="prod-img">Imagen</div>
+      <div class="prod-body">
+        <p class="prod-cat">Categoría</p>
+        <p class="prod-name">Producto 4</p>
+        <div class="prod-footer">
+          <span class="prod-price">$$$</span>
+          <span class="prod-stars">★★★★★</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!--CÓMO FUNCIONA-->
+<section class="section" id="como-funciona">
+  <div class="section-header">
+    <div>
+      <p class="section-label">En 3 pasos</p>
+      <h2>Cómo funciona</h2>
+    </div>
+  </div>
+  <div class="how-grid">
+    <div class="how-step">
+      <div class="step-num">01</div>
+      <h3 class="step-title">Crea tu cuenta</h3>
+      <p class="step-desc">Regístrate con tu nombre y email.</br>Verifica tu cuenta.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">02</div>
+      <h3 class="step-title">Publica o explora</h3>
+      <p class="step-desc">¿Quieres vender? Sube tu producto y ponle precio. </br>¿Quieres comprar? Navega por categorías y filtra a tu gusto.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">03</div>
+      <h3 class="step-title">Comparte tu opinión</h3>
+      <p class="step-desc">Califica productos con estrellas, deja comentarios y marca los más útiles.</p>
+    </div>
+  </div>
+</section>
+ 
+<!--TESTIMONIOS-->
+<section class="section test-section">
+  <div class="section-header">
+    <div>
+      <p class="section-label" style="color: rgba(255, 101, 101, 0.8);">Lo que dicen</p>
+      <h2>Aquí van testimonios (falsos?)</h2>
+    </div>
+  </div>
+  <div class="test-grid">
+    <div class="test-card">
+      <p class="test-text">"..."</p>
+      <div class="test-author">
+        <div class="test-avatar">CP</div>
+        <div>
+          <div class="test-name" style="color: #f7f3ec;">Canek Peláez</div>
+          <div class="test-role">Vendedor, CDMX</div>
+        </div>
+      </div>
+    </div>
+    <div class="test-card">
+      <p class="test-text">"..."</p>
+      <div class="test-author">
+        <div class="test-avatar">NC</div>
+        <div>
+          <div class="test-name" style="color: #f7f3ec;">Nicholas Cimmino</div>
+          <div class="test-role">Comprador frecuente, GDL</div>
+        </div>
+      </div>
+    </div>
+    <div class="test-card">
+      <p class="test-text">"..."</p>
+      <div class="test-author">
+        <div class="test-avatar">LA</div>
+        <div>
+          <div class="test-name" style="color: #f7f3ec;">Luana Álvarez</div>
+          <div class="test-role">Vendedora, MTY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!--BANNER HASTA ABAJO-->
+<div class="cta-banner">
+  <h2>Empieza a vender<br/>hoy mismo</h2>
+  <p>... Aquí texto para convencer de que ocupen la app ...</p>
+  <div class="cta-actions">
+    <a href="#" class="btn btn-solid" onclick="openModal('register'); return false;">Crear cuenta</a>
+    <a href="#" class="btn btn-outline" onclick="openModal('login'); return false;">Ya tengo cuenta</a>
+  </div>
+</div>
+ 
+<!--PIE DE PÁGINA-->
+<footer>
+  <div class="footer-top">
+    <div>
+      <a class="footer-brand" href="#">Trad<span>inn</span></a>
+      <p class="footer-tagline">...Un eslogan así bien acá...</p>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a href="#">Explorar productos</a>
+        <a href="#">Categorías</a>
+        <a href="#">Publicar producto</a>
+        <a href="#">Cómo funciona</a>
+      </div>
+      <div class="footer-col">
+        <h4>Cuenta</h4>
+        <a href="#" onclick="openModal('login'); return false;">Iniciar sesión</a>
+        <a href="#" onclick="openModal('register'); return false;">Registrarse</a>
+        <a href="#">Mi perfil</a>
+        <a href="#">Verificación</a>
+      </div>
+      <div class="footer-col">
+        <h4>Soporte</h4>
+        <a href="#">Centro de ayuda</a>
+        <a href="#">Políticas</a>
+        <a href="#">Contacto</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Tradinn. Todos los derechos reservados.</span>
+    <span>Por Karla, Mateo e Iván.</span>
+  </div>
+</footer>
+
+<form>
+    
+</form>
+ 
+<!--LOGIN/REGISTER chavos esto le tengo que mover unos problemas con la x y el tamaño-->
+<div class="modal-overlay" id="authModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-login" onclick="switchTab('login')">Ingresar</button>
+      <button class="modal-tab" id="tab-register" onclick="switchTab('register')">Registrarse</button>
+    </div>
+ 
+    <!-- LOGIN -->
+    <div class="tab-panel active" id="panel-login">
+      <div class="modal-body">
+        <h2 class="modal-title">Bienvenido de nuevo</h2>
+        <p class="modal-sub">Ingresa a tu cuenta de Tradinn</p>
+        <button class="google-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+          Continuar con Google
+        </button>
+        <div class="divider">o con tu email</div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="@email.com" />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" placeholder="••••••••" />
+        </div>
+        <div class="field">
+          <label>Código de Verificación</label>
+          <input type="text" placeholder="140106" maxlength="6" style="letter-spacing:0.2em;" />
+        </div>
+        <button class="btn btn-solid modal-submit">Ingresar →</button>
+      </div>
+    </div>
+ 
+    <!-- REGISTER -->
+    <form id="registerForm" class="tab-panel">
+        <div class="modal-body">
+        <h2 class="modal-title">Crea tu cuenta</h2>
+        <p class="modal-sub">Gratis</p>
+        
+        <button class="google-btn">
+            <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+            </svg>
+            Registrarse con Google
+        </button>
+
+        <div class="divider">o con tu email</div>
+
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" id="registerName" name="name" placeholder="Nombre" required/>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="registerEmail" name="email" placeholder="@email.com" required/>
+        </div>
+
+        <div class="field">
+          <label>Nombre de Usuario</label>
+          <input type="text" id="registerUsername" name="username" placeholder="Username" required/>
+        </div>
+        
+        <div class="field">
+          <label>Edad</label>
+          <input type="number" id="registerAge" name="age" placeholder="20" min="18" required/>
+        </div>
+
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="registerPassword" name="password" placeholder="Mínimo 8 caracteres" required/>
+        </div>
+
+        <button type="submit" class="btn btn-solid modal-submit">Crear cuenta →</button>
+
+      </div>
+    </form>
+  </div>
+</div>
+ 
+<script src="script.js"></script>
+ 
+</body>
+</html>
+ 
+<!--
+(65, 103, 178, 1.0) #4167b2 baby blue oscuro
+(4, 36, 99, 1.0) #042463 azul oscuro
+(120, 165, 255, 1.0) #78a5ff baby blue claro
+(253, 92, 99, 1.0) #fd5c63 durazno
+(255, 48, 57, 1.0) #ff3039 durazno más oscuro
+-->
