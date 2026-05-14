@@ -12,3 +12,4 @@ Canek Peláez Valdés
 - Hernández Lima Karla Lilián [karla.h.lima1401@ciencias.unam.mx]
 - Rendón Ávila Jesús Mateo [mateorendon.sci@ciencias.unam.mx]
 - Reyes Hernández Jorge Iván [ivannpy@ciencias.unam.mx]
+

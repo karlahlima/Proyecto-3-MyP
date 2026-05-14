@@ -21,4 +21,49 @@ function switchTab(tab) {
   });
 }
 
+const registerForm = document.getElementById('registerForm');
+const registerMessage = document.getElementById('registerMessage');
+
+function showRegisterMessage(message, isError = false) {
+  if (!registerMessage) return;
+  registerMessage.textContent = message; // Mensaje de respuesta a intento de registro
+  registerMessage.style.color = isError ? '#ff3039' : '#042463';
+}
+
+if (registerForm) {
+  registerForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const name = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const username = document.getElementById('registerUsername').value.trim();
+    const age = document.getElementById('registerAge').value;
+    const password = document.getElementById('registerPassword').value;
+
+    showRegisterMessage('');
+
+    try {
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, username, age, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showRegisterMessage(data.message || 'No se pudo registrar el usuario.', true);
+        return;
+      }
+
+      registerForm.reset();
+      showRegisterMessage(data.message || 'Usuario registrado correctamente.');
+    } catch (error) {
+      showRegisterMessage('Error de red. Intenta otra vez.', true);
+    }
+  });
+}
+
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
