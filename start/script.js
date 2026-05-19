@@ -23,6 +23,7 @@ function switchTab(tab) {
 
 const registerForm = document.getElementById('registerForm');
 const registerMessage = document.getElementById('registerMessage');
+const loginForm = document.getElementById('loginForm');
 
 function showRegisterMessage(message, isError = false) {
   if (!registerMessage) return;
@@ -32,7 +33,7 @@ function showRegisterMessage(message, isError = false) {
 
 if (registerForm) {
   registerForm.addEventListener('submit', async (event) => {
-    event.preventDefault(); // intercepta el submit 
+    event.preventDefault(); // intercepta el submit de registro
 
     const name = document.getElementById('registerName').value.trim();
     const email = document.getElementById('registerEmail').value.trim();
@@ -51,7 +52,7 @@ if (registerForm) {
         body: JSON.stringify({ name, email, username, age, password }),
       }); //JSON con los campos de registro.
 
-      const data = await response.json();
+      const data = await response.json(); // convierte la respuetsa json a objeto JS.
 
       if (!response.ok) {
         showRegisterMessage(data.message || 'No se pudo registrar el usuario.', true);
@@ -66,4 +67,40 @@ if (registerForm) {
   });
 }
 
+if(loginForm) {
+  loginForm.addEventlistener('submit', async(event) => {
+    event.preventdefaul(); // intercepta el submit de login
+
+    const emailOrUsername = document.getElementById('loginEmailOrUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({emailOrUsername, password}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showRegisterMessage(data.message || 'No se pudo registrar el usuario.', true); //TODO cambiar showRegisterMessage por un showErrorLogin y agregarlo al HTML
+        return;
+      }
+
+      loginForm.reset();
+
+      if(data.success) {
+        window.location.href = '/dashboard'; //TODO Crear la pagina de dashboard una vez el LOGIN es exitoso.
+      }
+      
+      
+    }catch (error) {
+      showRegisterMessage('Error de red. Intenta otra vez.', true); //TODO cambiar showRegisterMessage por un showErrorLogin y agregarlo al HTML
+    }
+    
+  });
+}
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
