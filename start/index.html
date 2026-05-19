@@ -351,7 +351,7 @@
     </div>
  
     <!-- LOGIN -->
-    <div class="tab-panel active" id="panel-login">
+    <form id = "loginForm" class="tab-panel active">
       <div class="modal-body">
         <h2 class="modal-title">Bienvenido de nuevo</h2>
         <p class="modal-sub">Ingresa a tu cuenta de Tradinn</p>
@@ -362,11 +362,11 @@
         <div class="divider">o con tu email</div>
         <div class="field">
           <label>Email</label>
-          <input type="email" placeholder="@email.com" />
+          <input type="email" id="loginEmail" name="email" placeholder="@email.com" required/>
         </div>
         <div class="field">
           <label>Contraseña</label>
-          <input type="password" placeholder="••••••••" />
+          <input type="password" id="loginPassword" placeholder="••••••••" required/>
         </div>
         <div class="field">
           <label>Código de Verificación</label>
@@ -374,7 +374,7 @@
         </div>
         <button class="btn btn-solid modal-submit">Ingresar →</button>
       </div>
-    </div>
+    </form>
  
     <!-- REGISTER -->
     <form id="registerForm" class="tab-panel">

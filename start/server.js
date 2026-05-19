@@ -30,12 +30,12 @@ app.post('/register', async (req, res) => {
 			return res.status(400).json({ message: 'Debes tener al menos 18 años.' });
 		}
 
-		const emailExists = await User.findByEmail(normalizedEmail);
+		const emailExists = await User.findUserOrEmail(normalizedEmail);
 		if (emailExists) {
 			return res.status(409).json({ message: 'Ese email ya está registrado.' });
 		}
 
-		const usernameExists = await User.findByUsername(normalizedUsername);
+		const usernameExists = await User.findUserOrEmail(normalizedUsername);
 		if (usernameExists) {
 			return res.status(409).json({ message: 'Ese nombre de usuario ya está registrado.' });
 		}

@@ -32,7 +32,7 @@ function showRegisterMessage(message, isError = false) {
 
 if (registerForm) {
   registerForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+    event.preventDefault(); // intercepta el submit 
 
     const name = document.getElementById('registerName').value.trim();
     const email = document.getElementById('registerEmail').value.trim();
@@ -49,7 +49,7 @@ if (registerForm) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, email, username, age, password }),
-      });
+      }); //JSON con los campos de registro.
 
       const data = await response.json();
 
