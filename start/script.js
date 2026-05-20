@@ -93,9 +93,9 @@ if(loginForm) {
       loginForm.reset();
 
       if(data.success) {
-        window.location.href = '/dashboard'; //TODO Crear la pagina de dashboard una vez el LOGIN es exitoso.
+        window.location.href = '/dashboard'; //TODO Crear la pagina de dashboard para redirigir una vez el LOGIN es exitoso.
       }
-      
+      // Probablemente agregar un mensaje de error.
       
     }catch (error) {
       showRegisterMessage('Error de red. Intenta otra vez.', true); //TODO cambiar showRegisterMessage por un showErrorLogin y agregarlo al HTML

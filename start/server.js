@@ -64,6 +64,37 @@ app.post('/register', async (req, res) => {
 	}
 });
 
+app.post('/login', async (req, res) => {
+    try { 
+		const {emailOrUSername, password} = req.body;
+
+		if( !emailOrUSername || !password) {
+			return res.status(400).json({ message: 'Faltan campos obligatorios.' });
+		}
+
+		const normalizedEmailOrUsername = string(emailOrUSername).trim().toLowerCase();
+
+		const emailOrUsernameExists = await User.findUserOrEmail(normalizedEmailOrUsername);
+		if(!emailOrUsernameExists) {
+			return  res.status(409).json({message: 'No se ha encontrado el email o nombre de usuario.'});
+		}
+		
+		if(emailOrUsernameExists)
+		const passwordHash = await bcrypt.hash(password, 10);
+		
+		
+	}catch (error) {
+		if (error.code === '23505') {
+			return res.status(409).json({ message: 'Email o usuario ya existe.' });
+		}
+
+		console.error(error);
+		return res.status(500).json({ message: 'Error interno del servidor.' });
+	}
+});
+
+
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
