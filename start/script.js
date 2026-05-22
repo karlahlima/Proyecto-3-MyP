@@ -14,8 +14,8 @@ function switchTab(tab) {
     const tabElem = document.getElementById('tab-' + t);
     if (tabElem) tabElem.classList.toggle('active', t === tab);
 
-    // Manejo del id="registerForm" mediante el id="tab-register" del boton Registrarse.
-    const panelId = t === 'register' ? 'registerForm' : 'panel-' + t;
+    // Login y registro están renderizados como forms; activamos el panel correcto.
+    const panelId = t === 'register' ? 'registerForm' : 'loginForm';
     const panelElem = document.getElementById(panelId);
     if (panelElem) panelElem.classList.toggle('active', t === tab);
   });
@@ -67,12 +67,15 @@ if (registerForm) {
   });
 }
 
-if(loginForm) {
-  loginForm.addEventlistener('submit', async(event) => {
-    event.preventdefaul(); // intercepta el submit de login
+if (loginForm) {
+  loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); // intercepta el submit de login
 
-    const emailOrUsername = document.getElementById('loginEmailOrUsername').value.trim();
+    const identifier = document.getElementById('loginEmailOrUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
+
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) { loginMessage.textContent = ''; loginMessage.style.color = '#042463'; }
 
     try {
       const response = await fetch('/login', {
@@ -80,27 +83,29 @@ if(loginForm) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({emailOrUsername, password}),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        showRegisterMessage(data.message || 'No se pudo registrar el usuario.', true); //TODO cambiar showRegisterMessage por un showErrorLogin y agregarlo al HTML
+        if (loginMessage) {
+          loginMessage.textContent = data.message || 'No se pudo iniciar sesión.';
+          loginMessage.style.color = '#ff3039';
+        }
         return;
       }
 
       loginForm.reset();
+      // Redirigir a dashboard o manejar sesión
+      window.location.href = '/login-dashboard.html';
 
-      if(data.success) {
-        window.location.href = '/dashboard'; //TODO Crear la pagina de dashboard para redirigir una vez el LOGIN es exitoso.
+    } catch (error) {
+      if (loginMessage) {
+        loginMessage.textContent = 'Error de red. Intenta otra vez.';
+        loginMessage.style.color = '#ff3039';
       }
-      // Probablemente agregar un mensaje de error.
-      
-    }catch (error) {
-      showRegisterMessage('Error de red. Intenta otra vez.', true); //TODO cambiar showRegisterMessage por un showErrorLogin y agregarlo al HTML
     }
-    
   });
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });

@@ -361,8 +361,8 @@
         </button>
         <div class="divider">o con tu email</div>
         <div class="field">
-          <label>Email</label>
-          <input type="email" id="loginEmailOrUsername" name="email" placeholder="@email.com" required/>
+          <label>Email o nombre de usuario</label>
+          <input type="text" id="loginEmailOrUsername" name="identifier" placeholder="usuario o email" required/>
         </div>
         <div class="field">
           <label>Contraseña</label>
@@ -372,6 +372,7 @@
           <label>Código de Verificación</label>
           <input type="text" placeholder="140106" maxlength="6" style="letter-spacing:0.2em;" />
         </div>
+        <p id="loginMessage" class="form-message" aria-live="polite"></p>
         <button class="btn btn-solid modal-submit">Ingresar →</button>
       </div>
     </form>

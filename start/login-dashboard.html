@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tradinn | Dashboard de prueba</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1208;
+      --cream: #f7f3ec;
+      --darkBlue: #042463;
+      --peach: #fd5c63;
+      --babyBlue: #78a5ff;
+      --border: rgba(26, 18, 8, 0.12);
+      --serif: 'DM Serif Display', Georgia, serif;
+      --sans: 'DM Sans', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 1rem 2rem;
+      background: rgba(247, 243, 236, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .brand span { color: var(--darkBlue); }
+
+    .topbar-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.7rem 1.1rem;
+      border-radius: 2px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+      border: 1.5px solid transparent;
+    }
+
+    .btn-outline {
+      border-color: var(--ink);
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .btn-outline:hover {
+      background: var(--ink);
+      color: var(--cream);
+    }
+
+    .btn-solid {
+      border-color: var(--darkBlue);
+      color: var(--cream);
+      background: var(--darkBlue);
+    }
+
+    .btn-solid:hover {
+      background: #031a49;
+      border-color: #031a49;
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 880px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(247, 243, 236, 0.96);
+      border: 1px solid var(--border);
+      box-shadow: 4px 4px 0 rgba(26, 18, 8, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .panel-main {
+      padding: 2rem;
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--darkBlue);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 1.03;
+      letter-spacing: -0.03em;
+      margin: 0 0 1rem;
+      max-width: 12ch;
+    }
+
+    h1 em {
+      color: var(--darkBlue);
+      font-style: italic;
+    }
+
+    .desc {
+      margin: 0 0 1.5rem;
+      color: var(--babyBlue);
+      line-height: 1.75;
+      max-width: 56ch;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--darkBlue);
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(4, 36, 99, 0.04);
+      margin-bottom: 1.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--peach);
+      box-shadow: 0 0 0 4px rgba(253, 92, 99, 0.15);
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .mini-card {
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      border-radius: 4px;
+    }
+
+    .mini-card h2 {
+      margin: 0 0 0.35rem;
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--babyBlue);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .mini-card strong {
+      color: var(--ink);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat {
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .stat-num {
+      font-family: var(--serif);
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+      color: var(--ink);
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--babyBlue);
+    }
+
+    .aside {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .aside .panel {
+      padding: 1.4rem;
+    }
+
+    .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--darkBlue);
+      margin-bottom: 0.7rem;
+    }
+
+    .list {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.35);
+      font-size: 0.92rem;
+    }
+
+    .list-item span:last-child {
+      color: var(--darkBlue);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    footer {
+      padding: 1.2rem 2rem 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--babyBlue);
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Trad<span>inn</span></a>
+    <div class="topbar-actions">
+      <a class="btn btn-outline" href="/">Volver al inicio</a>
+      <a class="btn btn-solid" href="/login-dashboard.html">Actualizar</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <article class="panel panel-main">
+        <div class="eyebrow">Inicio de sesión</div>
+        <h1>Login <em>correcto</em> y acceso de prueba</h1>
+        <p class="desc">
+          Esta pantalla confirma que el servidor respondió bien al endpoint <code>/login</code>.
+        </p>
+
+        <div class="status">
+          <span class="status-dot"></span>
+          Sesión iniciada correctamente
+        </div>
+
+        <div class="card-grid">
+          <div class="mini-card">
+            <h2>Usuario autenticado</h2>
+            <p><strong>Estado:</strong> listo para mostrar datos reales del usuario.</p>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-num">200</div>
+              <div class="stat-label">Respuesta esperada</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">OK</div>
+              <div class="stat-label">Login válido</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="aside">
+        <div class="panel">
+          <div class="label">Detalles</div>
+          <div class="list">
+            <div class="list-item"><span>Endpoint</span><span>/login</span></div>
+            <div class="list-item"><span>Archivo</span><span>server.js</span></div>
+            <div class="list-item"><span>Vista</span><span>login-dashboard.html</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="label">Próximos pasos</div>
+          <div class="list">
+            <div class="list-item"><span>1</span><span>Mostrar usuario</span></div>
+            <div class="list-item"><span>2</span><span>Cerrar sesión</span></div>
+            <div class="list-item"><span>3</span><span>Proteger rutas</span></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    <span>Tradinn · dashboard de prueba</span>
+  </footer>
+</body>
+</html>
