@@ -65,29 +65,33 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-    try { 
-		const {emailOrUSername, password} = req.body;
+	try {
+		const { identifier, password } = req.body; // identifier = email o username
 
-		if( !emailOrUSername || !password) {
+		if (!identifier || !password) {
 			return res.status(400).json({ message: 'Faltan campos obligatorios.' });
 		}
 
-		const normalizedEmailOrUsername = string(emailOrUSername).trim().toLowerCase();
+		const idRaw = String(identifier).trim();
+		// Normalizar solo si parece un email
+		const searchKey = idRaw.includes('@') ? idRaw.toLowerCase() : idRaw;
 
-		const emailOrUsernameExists = await User.findUserOrEmail(normalizedEmailOrUsername);
-		if(!emailOrUsernameExists) {
-			return  res.status(409).json({message: 'No se ha encontrado el email o nombre de usuario.'});
-		}
-		
-		if(emailOrUsernameExists)
-		const passwordHash = await bcrypt.hash(password, 10);
-		
-		
-	}catch (error) {
-		if (error.code === '23505') {
-			return res.status(409).json({ message: 'Email o usuario ya existe.' });
+		const userRecord = await User.findUserOrEmail(searchKey);
+		if (!userRecord) {
+			return res.status(401).json({ message: 'Credenciales inválidas.' });
 		}
 
+		// En la BD el campo es `password_hash`
+		const passwordHash = userRecord.password_hash || userRecord.passwordHash;
+		const passwordMatch = await bcrypt.compare(password, passwordHash);
+		if (!passwordMatch) {
+			return res.status(401).json({ message: 'Credenciales inválidas.' });
+		}
+
+		const { password_hash, passwordHash: _ph, ...safeUser } = userRecord;
+
+		return res.status(200).json({ message: 'Login exitoso.', user: safeUser });
+	} catch (error) {
 		console.error(error);
 		return res.status(500).json({ message: 'Error interno del servidor.' });
 	}
