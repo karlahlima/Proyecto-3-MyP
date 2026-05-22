@@ -1,9 +1,59 @@
 services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-mercatto}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mercatto_pass}
+      POSTGRES_DB:       ${POSTGRES_DB:-mercatto_db}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mercatto}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-mercatto}:${POSTGRES_PASSWORD:-mercatto_pass}@db:5432/${POSTGRES_DB:-mercatto_db}
+      JWT_SECRET:   ${JWT_SECRET:-cambiar_en_produccion}
+      PORT:         3000
+      NODE_ENV:     ${NODE_ENV:-production}
+    networks:
+      - backend_net
+      - frontend_net
+    depends_on:
+      db:
+        condition: service_healthy
+
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-    - "8080:80"
+      - "${PORT:-8080}:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
-      - ./frontend/dist:/usr/share/nginx/html:ro
-    restart: unless-stopped
+    networks:
+      - frontend_net
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend_net:
+    driver: bridge
+    internal: true
+  frontend_net:
+    driver: bridge
