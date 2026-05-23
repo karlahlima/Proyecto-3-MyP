@@ -14,6 +14,22 @@ app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+/* Recibe datos desde el frontend (name, email, username, age, password)
+* usando req.body, mediante el fetch('/register') en script.js.
+*
+* Verifica que no falten campos en el formulario de registro.
+* Normaliza lo datos: email, username, age.
+*
+* 1. verifica que si la edad sea un numero o menor a 18 se mande un err.400.
+* 2. Verifica si el email ya se encuentra registrado usando findUSerOrEmail de
+*    USer.js.
+* 3. Verifica si el usuario ya se encuentra registrado usando findUSerOrEmail de
+*    User.js.
+* 4. Hashea el password usando la biblioteca bcrypt.
+* 5. Crea el usuario nuevo con create de User.js el cual se comunica con
+*    la base de datos.
+* 6. Por ultimo retorna el mensaje exitoso.
+*/
 app.post('/register', async (req, res) => {
 	try {
 		const { name, email, username, age, password } = req.body;
@@ -64,16 +80,27 @@ app.post('/register', async (req, res) => {
 	}
 });
 
+/* Recibe datos desde el frontend (identifier, password) usando req.body,
+* donde identifier puede ser: email o username,
+* mediante el fetch('/register') en script.js.
+*
+* Verifica que no falten campos en el formulario de login.
+* Normaliza lo datos: email.
+*
+* 1. Verifica que exista el email o username con findUserOrEmail en User.js.
+* 2. Compara la contraseña ingresada con la de la base de datos.
+* 3. Si los datos son correctos, limpia el passwordHash del JSON de resouesta
+*    y manda el mensaje de login exitoso.
+*/
 app.post('/login', async (req, res) => {
 	try {
-		const { identifier, password } = req.body; // identifier = email o username
+		const { identifier, password } = req.body; 
 
 		if (!identifier || !password) {
 			return res.status(400).json({ message: 'Faltan campos obligatorios.' });
 		}
 
 		const idRaw = String(identifier).trim();
-		// Normalizar solo si parece un email
 		const searchKey = idRaw.includes('@') ? idRaw.toLowerCase() : idRaw;
 
 		const userRecord = await User.findUserOrEmail(searchKey);
