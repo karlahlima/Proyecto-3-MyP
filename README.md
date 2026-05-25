@@ -1,15 +1,28 @@
-# Modelado y Programación 2026-2
+# Tradinn (Actualizado hasta el 25/05)
 
-## Proyecto 3
-Este proyecto consiste en el desarrollo de un sitio web de compra y venta de productos, inspirada en el funcionamiento de un marketplace en línea. La plataforma permitirá la interacción entre compradores y vendedores mediante un sistema de publicaciones, comentarios, reseñas y mensajes privados.
+Stack: 
+- Frontend: React + Vite
+- Backend: Express + JW
+- DB: PostgresSQL
+- Proxy inverso: Nginx
+- Build: Docker 
 
-El sistema estará diseñado bajo una arquitectura de 3 capas y se implementará el patrón de diseño Modelo Vista Controlador (MVC), permitiendo organizar el proyecto de manera estructurada.
+## Para ejecutar:
 
-### Profesor:
-Canek Peláez Valdés
+1. Copiar el archivo de variables de entorno
+```cp .env.example .env```
 
-### Equipo 2:
-- Hernández Lima Karla Lilián [karla.h.lima1401@ciencias.unam.mx]
-- Rendón Ávila Jesús Mateo [mateorendon.sci@ciencias.unam.mx]
-- Reyes Hernández Jorge Iván [ivannpy@ciencias.unam.mx]
+2. Construir y levantar
+```docker compose up --build```
 
+3. Abrir en el navegador
+```http://localhost:8080```
+
+4. Para detener
+```docker compose down```
+
+* Para correr en segundo plano: 
+```docker compose up --build -d```
+
+* Para borrar los datos de la db:
+```docker compose down -v```
