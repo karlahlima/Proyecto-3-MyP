@@ -16,13 +16,13 @@ Stack:
 ```docker compose up --build```
 
 3. Abrir en el navegador
-```http://localhost:8080```
+```http://localhost:3001```
 
 4. Para detener
 ```docker compose down```
 
 * Para correr en segundo plano: 
-```docker compose up --build -d```
+```docker compose up --build```
 
 * Para borrar los datos de la db:
-```docker compose down -v```
+```docker compose down```
