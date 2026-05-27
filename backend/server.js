@@ -95,13 +95,13 @@ app.post('/auth/login', async (req, res) => {
 
         const userRecord = await User.findUserOrEmail(searchKey);
         if (!userRecord) {
-            return res.status(401).json({ message: 'Credenciales inválidas.' });
+            return res.status(401).json({ message: 'Email inválido.' });
         }
 
         const passwordHash  = userRecord.password_hash || userRecord.passwordHash;
         const passwordMatch = await bcrypt.compare(password, passwordHash);
         if (!passwordMatch) {
-            return res.status(401).json({ message: 'Credenciales inválidas.' });
+            return res.status(401).json({ message: 'Contraseña inválida.' });
         }
 
         const { password_hash, ...safeUser } = userRecord;
@@ -137,7 +137,6 @@ app.patch('/users/me', auth, async (req, res) => {
         if (age)      { fields.push(`age      = $${i++}`); values.push(Number(age)); }
         if (username) {
             const newUsername = String(username).trim();
-            // Verificar que no esté tomado por otro usuario
             const { rows: taken } = await pool.query(
                 'SELECT id FROM users WHERE username = $1 AND id != $2',
                 [newUsername, req.user.id]
@@ -255,7 +254,7 @@ app.get('/products', async (req, res) => {
         const values     = [];
         let i = 1;
 
-        if (category) { conditions.push(`UPPER(p.category) = UPPER($${i++})`);  values.push(category); }
+        if (category) { conditions.push(`UPPER(p.category) = UPPER($${i++})`); values.push(category); }
         if (search)   { conditions.push(`p.title ILIKE $${i++}`);              values.push(`%${search}%`); }
         if (seller)   { conditions.push(`p.seller_id = $${i++}`);              values.push(Number(seller)); }
 
@@ -303,12 +302,11 @@ app.get('/products/:slug', async (req, res) => {
 
 app.post('/products', auth, async (req, res) => {
     try {
-        const { title, description, price, category, stock } = req.body;
+        const { title, description, price, category, stock, image_url } = req.body;
         if (!title || price === undefined) {
             return res.status(400).json({ message: 'title y price son obligatorios.' });
         }
 
-        // Normalizar categoría a mayúsculas sin tildes para consistencia con la BD
         const categoryMap = {
             'ropa':'ROPA', 'comida':'COMIDA', 'electrodomésticos':'ELECTRODOMESTICOS',
             'electrodomesticos':'ELECTRODOMESTICOS', 'electrónica':'ELECTRONICA',
@@ -327,11 +325,11 @@ app.post('/products', auth, async (req, res) => {
         if (existing.length) slug = `${slug}-${Date.now()}`;
 
         const { rows } = await pool.query(
-            `INSERT INTO products (slug, title, description, price, category, stock, seller_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `INSERT INTO products (slug, title, description, price, category, stock, seller_id, image_url)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              RETURNING *`,
             [slug, title, description ?? null, Number(price),
-             normalizedCategory, stock ?? 1, req.user.id]
+             normalizedCategory, stock ?? 1, req.user.id, image_url ?? null]
         );
         return res.status(201).json(rows[0]);
     } catch (error) {
@@ -350,7 +348,7 @@ app.patch('/products/:slug', auth, async (req, res) => {
             return res.status(403).json({ message: 'No autorizado.' });
         }
 
-        const { title, description, price, category, stock } = req.body;
+        const { title, description, price, category, stock, image_url } = req.body;
         const fields = [];
         const values = [];
         let i = 1;
@@ -360,6 +358,7 @@ app.patch('/products/:slug', auth, async (req, res) => {
         if (price       !== undefined) { fields.push(`price       = $${i++}`); values.push(Number(price)); }
         if (category    !== undefined) { fields.push(`category    = $${i++}`); values.push(category); }
         if (stock       !== undefined) { fields.push(`stock       = $${i++}`); values.push(Number(stock)); }
+        if (image_url   !== undefined) { fields.push(`image_url   = $${i++}`); values.push(image_url); }
 
         if (!fields.length) return res.status(400).json({ message: 'Nada que actualizar.' });
 

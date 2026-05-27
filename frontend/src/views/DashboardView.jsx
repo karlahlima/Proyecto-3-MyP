@@ -5,8 +5,8 @@ import './DashboardView.css';
 
 function labelCategory(cat) {
   const map = {
-    ROPA:'Ropa', COMIDA:'Comida', ELECTRODOMESTICOS:'Electrodomésticos',
-    ELECTRONICA:'Electrónica', DEPORTES:'Deportes', LIBROS:'Libros',
+    ROPA:'Ropa', COMIDA:'Comida', ELECTRODOMÉSTICOS:'Electrodomésticos',
+    ELECTRÓNICA:'Electrónica', DEPORTES:'Deportes', LIBROS:'Libros',
     HOGAR:'Hogar', BELLEZA:'Belleza', AUTOMOTRIZ:'Automotriz',
     JUGUETES:'Juguetes', ARTE:'Arte', OTROS:'Otros',
   };

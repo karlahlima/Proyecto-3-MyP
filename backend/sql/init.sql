@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
   price       NUMERIC(10,2) NOT NULL CHECK (price >= 0),
   category    VARCHAR(100),
   stock       INTEGER       NOT NULL DEFAULT 1 CHECK (stock >= 0),
+  image_url   TEXT,
   seller_id   INTEGER       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );

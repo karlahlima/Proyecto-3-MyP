@@ -73,8 +73,8 @@ function ProductCard({ product, onRate, onAddCart, onDelete, isOwner, isLogged, 
   return (
     <article className="product-card">
       <div className="card-image">
-        {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.title} loading="lazy" />
+        {(product.image_url || product.imageUrl)
+          ? <img src={product.image_url ?? product.imageUrl} alt={product.title} loading="lazy" className="card-img" />
           : (
             <div className="card-placeholder">
               <CategoryIcon category={product.category} className="placeholder-icon" />
@@ -155,11 +155,27 @@ function ProductCard({ product, onRate, onAddCart, onDelete, isOwner, isLogged, 
 }
 
 function PublishModal({ onClose, onSuccess }) {
-  const [form,    setForm]    = useState({ title: '', description: '', price: '', category: 'Otros', imageUrl: '' });
+  const [form,    setForm]    = useState({ title: '', description: '', price: '', category: 'Otros', stock: '1' });
+  const [imageB64, setImageB64] = useState('');
+  const [preview,  setPreview]  = useState('');
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
+  const fileRef = useRef();
 
   function set(field, value) { setForm((f) => ({ ...f, [field]: value })); }
+
+  function handleImageFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setError('La imagen no puede superar 2 MB.');
+      return;
+    }
+    setPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => setImageB64(reader.result);
+    reader.readAsDataURL(file);
+  }
 
   async function handleSubmit() {
     if (!form.title?.trim() || !form.price) {
@@ -168,7 +184,12 @@ function PublishModal({ onClose, onSuccess }) {
     }
     setLoading(true); setError('');
     try {
-      await createProduct({ ...form, price: parseFloat(form.price) });
+      await createProduct({
+        ...form,
+        price:     parseFloat(form.price),
+        stock:     parseInt(form.stock, 10) || 1,
+        image_url: imageB64 || null,
+      });
       onSuccess?.();
       onClose();
     } catch (e) {
@@ -192,6 +213,53 @@ function PublishModal({ onClose, onSuccess }) {
 
         <div className="modal-body">
           {error && <p className="form-error">{error}</p>}
+
+          {/* Imagen */}
+          <div className="field">
+            <label>Imagen del producto <span className="field-optional">(opcional, máx 2 MB)</span></label>
+            <div
+              className={`image-picker${preview ? ' image-picker--filled' : ''}`}
+              onClick={() => fileRef.current?.click()}
+            >
+              {preview ? (
+                <>
+                  <img src={preview} alt="Vista previa" className="image-picker-preview" />
+                  <div className="image-picker-overlay">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Cambiar imagen
+                  </div>
+                </>
+              ) : (
+                <div className="image-picker-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  <span>Haz clic para subir una imagen</span>
+                  <span className="image-picker-sub">PNG, JPG, WEBP</span>
+                </div>
+              )}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleImageFile}
+            />
+            {preview && (
+              <button
+                className="btn-remove-image"
+                onClick={(e) => { e.stopPropagation(); setPreview(''); setImageB64(''); }}
+              >
+                ✕ Quitar imagen
+              </button>
+            )}
+          </div>
 
           <div className="field">
             <label>Nombre del producto</label>
@@ -224,6 +292,16 @@ function PublishModal({ onClose, onSuccess }) {
                 step="0.01"
               />
             </div>
+            <div className="field field--stock">
+              <label>Stock</label>
+              <input
+                type="number"
+                value={form.stock}
+                onChange={(e) => set('stock', e.target.value)}
+                placeholder="1"
+                min="1"
+              />
+            </div>
             <div className="field field--category">
               <label>Categoría</label>
               <select value={form.category} onChange={(e) => set('category', e.target.value)}>
@@ -232,15 +310,6 @@ function PublishModal({ onClose, onSuccess }) {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="field">
-            <label>URL de imagen <span className="field-optional">(opcional)</span></label>
-            <input
-              value={form.imageUrl}
-              onChange={(e) => set('imageUrl', e.target.value)}
-              placeholder="https://…"
-            />
           </div>
         </div>
 
@@ -265,15 +334,16 @@ export default function ProductsView({ isLogged, onOpenLogin }) {
   const [notification, setNotif]     = useState(null);
   const [sortBy,       setSortBy]    = useState('reciente');
   const searchRef = useRef();
+  const debounceRef = useRef(null);
 
   const currentUserId = localStorage.getItem('userId');
 
-  async function loadProducts() {
+  async function loadProducts(searchValue = search, categoryValue = category) {
     setLoading(true); setError('');
     try {
       const params = {};
-      if (search)   params.search   = search;
-      if (category) params.category = category;
+      if (searchValue)   params.search   = searchValue;
+      if (categoryValue) params.category = categoryValue;
       setProducts(await getProducts(params));
     } catch (e) {
       setError(e.message);
@@ -282,7 +352,16 @@ export default function ProductsView({ isLogged, onOpenLogin }) {
     }
   }
 
-  useEffect(() => { loadProducts(); }, [category]);
+  useEffect(() => { loadProducts(search, category); }, [category]);
+
+  function handleSearchChange(e) {
+    const value = e.target.value;
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      loadProducts(value, category);
+    }, 300);
+  }
 
   function notify(msg, type = 'ok') {
     setNotif({ msg, type });
@@ -360,12 +439,21 @@ export default function ProductsView({ isLogged, onOpenLogin }) {
             <input
               ref={searchRef}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && loadProducts()}
+              onChange={handleSearchChange}
               placeholder="Buscar productos…"
-              className="search-input"
+              className="search-input search-input--full"
             />
-            <button className="search-btn" onClick={loadProducts}>Buscar</button>
+            {search && (
+              <button
+                className="search-clear"
+                onClick={() => { setSearch(''); loadProducts('', category); }}
+                aria-label="Limpiar búsqueda"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            )}
           </div>
           <div className="sort-wrap">
             <label className="sort-label">Ordenar:</label>
