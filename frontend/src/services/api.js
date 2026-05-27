@@ -4,13 +4,13 @@ async function request(path, options = {}) {
     const token = localStorage.getItem('token');
     const res = await fetch(`${BASE_URL}${path}`, {
         headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...options,
     });
 
-    if(!res.ok) {
+    if (!res.ok) {
         const err = await res.json().catch(() => ({ message: res.statusText }));
         throw new Error(err.message ?? 'Error en la solicitud');
     }
@@ -18,7 +18,47 @@ async function request(path, options = {}) {
     return res.json();
 }
 
-//PRODUCTOS
+// AUTH
+
+export async function login({ email, password }) {
+    const data = await request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+    });
+    if (data.token) {
+        localStorage.setItem('token',      data.token);
+        localStorage.setItem('userId', data.user?.id ?? '');
+        localStorage.setItem('userName',   data.user?.name  ?? '');
+        localStorage.setItem('userUsername', data.user?.username ?? '');
+        localStorage.setItem('userEmail',  data.user?.email ?? email);
+    }
+    return data;
+}
+
+export async function register({ name, email, age, password }) {
+    const data = await request('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, age: Number(age), password }),
+    });
+    if (data.token) {
+        localStorage.setItem('token',      data.token);
+        localStorage.setItem('userId', data.user?.id ?? '');
+        localStorage.setItem('userName',   data.user?.name  ?? name);
+        localStorage.setItem('userUsername', data.user?.username ?? '');
+        localStorage.setItem('userEmail',  data.user?.email ?? email);
+    }
+    return data;
+}
+
+export function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userUsername');
+    localStorage.removeItem('userEmail');
+}
+
+// PRODUCTOS
 
 export async function getProducts(params = {}) {
     const qs = new URLSearchParams(params).toString();
@@ -33,57 +73,15 @@ export async function createProduct(data) {
     return request('/products', { method: 'POST', body: JSON.stringify(data) });
 }
 
+export async function updateProduct(slug, data) {
+    return request(`/products/${slug}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
 export async function deleteProduct(slug) {
     return request(`/products/${slug}`, { method: 'DELETE' });
 }
 
-//AUTH
-
-export async function login({ email, password }) {
-    const res = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }));
-        throw new Error(err.message ?? 'Credenciales incorrectas');
-    }
-    const data = await res.json();
-    if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userName',  data.user?.name  ?? data.name  ?? '');
-        localStorage.setItem('userEmail', data.user?.email ?? data.email ?? email);
-    }
-    return data;
-}
-
-export async function register({ name, email, age, password }) {
-    const res = await fetch(`${BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, age: Number(age), password }),
-    });
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }));
-        throw new Error(err.message ?? 'Error al registrarse');
-    }
-    const data = await res.json();
-    if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userName',  data.user?.name  ?? name);
-        localStorage.setItem('userEmail', data.user?.email ?? email);
-    }
-    return data;
-}
-
-export function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-}
-
-//USERS
+// USUARIOS
 
 export async function getMyProfile() {
     return request('/users/me');
@@ -102,7 +100,10 @@ export async function uploadAvatar(file) {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
     });
-    if (!res.ok) throw new Error('Error al subir imagen');
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error(err.message ?? 'Error al subir imagen');
+    }
     return res.json();
 }
 
@@ -113,6 +114,8 @@ export async function getMyPurchases() {
 export async function getMyListings() {
     return request('/users/me/listings');
 }
+
+// CARRITO
 
 export async function getMyCart() {
     return request('/users/me/cart');
@@ -129,7 +132,7 @@ export async function removeFromCart(cartItemId) {
     return request(`/users/me/cart/${cartItemId}`, { method: 'DELETE' });
 }
 
-//COMENTARIOS
+// COMENTARIOS
 
 export async function getComments(productSlug) {
     return request(`/products/${productSlug}/comments`);
@@ -151,7 +154,7 @@ export async function voteComment(commentId, useful) {
 
 export async function rateProduct(productSlug, stars) {
     return request(`/products/${productSlug}/ratings`, {
-    method: 'POST',
-    body: JSON.stringify({ stars }),
+        method: 'POST',
+        body: JSON.stringify({ stars }),
     });
 }

@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, useNavigate } from 'react-router-dom';
 import ProductsView  from './views/ProductsView';
 import ProfileView   from './views/ProfileView';
-import DashboardView from './views/DashboardView';
 import { login, register, logout } from './services/api';
 import './index.css';
 
@@ -10,12 +9,13 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
   const [tab,     setTab]     = useState(defaultTab);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
+  const [registered, setRegistered] = useState(false);
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [regForm, setRegForm] = useState({ name: '', email: '', age: '', password: '' });
+  const [regForm,   setRegForm]   = useState({ name: '', email: '', age: '', password: '' });
 
-  function setL(field, value) { setLoginForm(f => ({ ...f, [field]: value })); }
-  function setR(field, value) { setRegForm(f => ({ ...f, [field]: value })); }
+  function setL(f, v) { setLoginForm(p => ({ ...p, [f]: v })); }
+  function setR(f, v) { setRegForm(p => ({ ...p, [f]: v })); }
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -36,8 +36,9 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
     setError(''); setLoading(true);
     try {
       await register(regForm);
-      onSuccess?.();
-      onClose();
+      setRegistered(true);
+      setTab('login');
+      setLoginForm({ email: regForm.email, password: '' });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,7 +46,7 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
     }
   }
 
-  function switchTab(t) { setTab(t); setError(''); }
+  function switchTab(t) { setTab(t); setError(''); setRegistered(false); }
 
   return (
     <div className="auth-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -65,6 +66,11 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
           <div className="auth-body">
             <h2 className="auth-title">Bienvenido de nuevo</h2>
             <p className="auth-sub">Ingresa a tu cuenta de Tradinn</p>
+            {registered && (
+              <p className="auth-success">
+                ✓ Cuenta creada correctamente. Ahora inicia sesión.
+              </p>
+            )}
             {error && <p className="auth-error">{error}</p>}
             <form onSubmit={handleLogin}>
               <div className="auth-field">
@@ -129,14 +135,13 @@ function Navbar({ isLogged, userName, onOpenLogin, onOpenRegister, onLogout }) {
         <NavLink to="/productos" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
           Explorar
         </NavLink>
-        <NavLink to="/dashboard" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-          Dashboard
-        </NavLink>
+
         {isLogged && (
           <NavLink to="/perfil" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
             Mi perfil
           </NavLink>
         )}
+
         {isLogged ? (
           <>
             <span className="nav-user">Hola, {userName?.split(' ')[0] ?? 'Usuario'}</span>
@@ -156,7 +161,7 @@ function Navbar({ isLogged, userName, onOpenLogin, onOpenRegister, onLogout }) {
 export default function App() {
   const [isLogged,  setIsLogged]  = useState(Boolean(localStorage.getItem('token')));
   const [userName,  setUserName]  = useState(localStorage.getItem('userName') ?? '');
-  const [authModal, setAuthModal] = useState(null); // null | 'login' | 'register'
+  const [authModal, setAuthModal] = useState(null);
 
   function handleAuthSuccess() {
     setIsLogged(true);
@@ -180,10 +185,9 @@ export default function App() {
       />
       <main className="app-main">
         <Routes>
-          <Route path="/"           element={<ProductsView />} />
-          <Route path="/productos"  element={<ProductsView />} />
-          <Route path="/dashboard"  element={<DashboardView />} />
-          <Route path="/perfil"     element={<ProfileView />} />
+          <Route path="/"          element={<ProductsView isLogged={isLogged} onOpenLogin={() => setAuthModal('login')} />} />
+          <Route path="/productos" element={<ProductsView isLogged={isLogged} onOpenLogin={() => setAuthModal('login')} />} />
+          <Route path="/perfil"    element={<ProfileView  isLogged={isLogged} onOpenLogin={() => setAuthModal('login')} />} />
         </Routes>
       </main>
 

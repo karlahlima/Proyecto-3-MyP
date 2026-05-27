@@ -146,3 +146,13 @@ body {
 }
 .auth-submit:hover:not(:disabled) { background: #031a4a; border-color: #031a4a; }
 .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+}

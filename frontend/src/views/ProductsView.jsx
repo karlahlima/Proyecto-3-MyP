@@ -3,6 +3,26 @@ import { getProducts, createProduct, deleteProduct, rateProduct, addToCart } fro
 import CategoryIcon from '../components/CategoryIcon';
 import './ProductsView.css';
 
+const CATEGORIES = [
+  { value: 'Ropa',              label: 'Ropa'              },
+  { value: 'Comida',            label: 'Comida'            },
+  { value: 'Electrodomésticos', label: 'Electrodomésticos' },
+  { value: 'Electrónica',       label: 'Electrónica'       },
+  { value: 'Deportes',          label: 'Deportes'          },
+  { value: 'Libros',            label: 'Libros'            },
+  { value: 'Hogar',             label: 'Hogar'             },
+  { value: 'Belleza',           label: 'Belleza'           },
+  { value: 'Automotriz',        label: 'Automotriz'        },
+  { value: 'Juguetes',          label: 'Juguetes'          },
+  { value: 'Arte',              label: 'Arte'              },
+  { value: 'Otros',             label: 'Otros'             },
+];
+
+export function labelCategory(cat) {
+  const found = CATEGORIES.find(c => c.value === cat || c.value.toUpperCase() === cat?.toUpperCase());
+  return found?.label ?? cat ?? 'Otros';
+}
+
 function StarRating({ value = 0, interactive = false, onChange }) {
   const [hovered, setHovered] = useState(0);
   const display = interactive ? hovered || value : value;
@@ -27,12 +47,13 @@ function StarRating({ value = 0, interactive = false, onChange }) {
   );
 }
 
-function ProductCard({ product, onRate, onAddCart, onDelete, isOwner }) {
+function ProductCard({ product, onRate, onAddCart, onDelete, isOwner, isLogged, onOpenLogin }) {
   const [added,      setAdded]      = useState(false);
   const [deleting,   setDeleting]   = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
 
   async function handleCart() {
+    if (!isLogged) { onOpenLogin?.(); return; }
     try {
       await onAddCart(product.slug);
       setAdded(true);
@@ -47,13 +68,13 @@ function ProductCard({ product, onRate, onAddCart, onDelete, isOwner }) {
     finally { setDeleting(false); setConfirmDel(false); }
   }
 
-  const rating = product._avg?.stars ?? 0;
+  const rating = Number(product.avg_rating ?? product._avg?.stars ?? 0);
 
   return (
     <article className="product-card">
       <div className="card-image">
         {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} loading="lazy" />
+          ? <img src={product.imageUrl} alt={product.title} loading="lazy" />
           : (
             <div className="card-placeholder">
               <CategoryIcon category={product.category} className="placeholder-icon" />
@@ -66,38 +87,66 @@ function ProductCard({ product, onRate, onAddCart, onDelete, isOwner }) {
             className={`btn-delete-card${confirmDel ? ' confirm' : ''}`}
             onClick={handleDelete}
             disabled={deleting}
-            title={confirmDel ? 'Confirmar' : 'Eliminar'}
+            title={confirmDel ? 'Confirmar eliminación' : 'Eliminar producto'}
           >
             {deleting ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spin"><circle cx="12" cy="12" r="9" strokeDasharray="28" strokeDashoffset="8"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spin">
+                <circle cx="12" cy="12" r="9" strokeDasharray="28" strokeDashoffset="8"/>
+              </svg>
             ) : confirmDel ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6m4-6v6"/>
+                <path d="M9 6V4h6v2"/>
+              </svg>
             )}
           </button>
         )}
       </div>
 
       <div className="card-body">
-        <h3 className="card-title">{product.name}</h3>
+        <h3 className="card-title">{product.title}</h3>
         <p className="card-desc">{product.description}</p>
         <div className="card-seller">
           <span className="seller-dot" />
-          {product.seller?.name ?? product.sellerEmail}
+          {product.seller_name ?? product.seller?.name ?? 'Vendedor'}
         </div>
         <div className="card-footer">
           <span className="card-price">${Number(product.price).toLocaleString('es-MX')}</span>
           <div className="card-rating">
-            <StarRating value={rating} interactive onChange={(s) => onRate(product.slug, s)} />
-            {rating > 0 && <span className="rating-num">{rating.toFixed(1)}</span>}
+            <StarRating
+              value={rating}
+              interactive={isLogged && !isOwner}
+              onChange={(s) => onRate(product.slug, s)}
+            />
+            {rating > 0 && <span className="rating-num">{Number(rating).toFixed(1)}</span>}
           </div>
         </div>
-        <button className={`btn-cart${added ? ' btn-cart--added' : ''}`} onClick={handleCart}>
+        <button
+          className={`btn-cart${added ? ' btn-cart--added' : ''}${!isLogged ? ' btn-cart--locked' : ''}`}
+          onClick={handleCart}
+          title={!isLogged ? 'Inicia sesión para agregar al carrito' : ''}
+        >
           {added ? (
-            <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Agregado</>
+            <>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Agregado
+            </>
           ) : (
-            <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Agregar al carrito</>
+            <>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              {isLogged ? 'Agregar al carrito' : 'Inicia sesión para comprar'}
+            </>
           )}
         </button>
       </div>
@@ -105,26 +154,28 @@ function ProductCard({ product, onRate, onAddCart, onDelete, isOwner }) {
   );
 }
 
-const CATEGORIES = [
-  'ROPA','COMIDA','ELECTRODOMESTICOS','ELECTRONICA',
-  'DEPORTES','LIBROS','HOGAR','BELLEZA','AUTOMOTRIZ','JUGUETES','ARTE','OTROS',
-];
-
 function PublishModal({ onClose, onSuccess }) {
-  const [form,    setForm]    = useState({ name:'', description:'', price:'', category:'OTROS', imageUrl:'' });
+  const [form,    setForm]    = useState({ title: '', description: '', price: '', category: 'Otros', imageUrl: '' });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
   function set(field, value) { setForm((f) => ({ ...f, [field]: value })); }
 
   async function handleSubmit() {
-    if (!form.name || !form.price) { setError('Nombre y precio son requeridos'); return; }
+    if (!form.title?.trim() || !form.price) {
+      setError('Nombre y precio son obligatorios.');
+      return;
+    }
     setLoading(true); setError('');
     try {
       await createProduct({ ...form, price: parseFloat(form.price) });
-      onSuccess?.(); onClose();
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
+      onSuccess?.();
+      onClose();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -133,36 +184,66 @@ function PublishModal({ onClose, onSuccess }) {
         <div className="modal-header">
           <h2>Publicar producto</h2>
           <button className="modal-x" onClick={onClose} aria-label="Cerrar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
+
         <div className="modal-body">
           {error && <p className="form-error">{error}</p>}
+
           <div className="field">
             <label>Nombre del producto</label>
-            <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Ej: Tenis Nike Air Max" />
+            <input
+              value={form.title}
+              onChange={(e) => set('title', e.target.value)}
+              placeholder="Ej: Tenis Nike Air Max"
+            />
           </div>
+
           <div className="field">
             <label>Descripción</label>
-            <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3} placeholder="Describe tu producto…" />
+            <textarea
+              value={form.description}
+              onChange={(e) => set('description', e.target.value)}
+              rows={3}
+              placeholder="Describe tu producto…"
+            />
           </div>
+
           <div className="field-row">
-            <div className="field">
+            <div className="field field--price">
               <label>Precio (MXN)</label>
-              <input type="number" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="0.00" min="0" step="0.01" />
+              <input
+                type="number"
+                value={form.price}
+                onChange={(e) => set('price', e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
             </div>
-            <div className="field">
+            <div className="field field--category">
               <label>Categoría</label>
               <select value={form.category} onChange={(e) => set('category', e.target.value)}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{labelCategory(c)}</option>)}
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
               </select>
             </div>
           </div>
+
           <div className="field">
-            <label>URL de imagen (opcional)</label>
-            <input value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} placeholder="https://…" />
+            <label>URL de imagen <span className="field-optional">(opcional)</span></label>
+            <input
+              value={form.imageUrl}
+              onChange={(e) => set('imageUrl', e.target.value)}
+              placeholder="https://…"
+            />
           </div>
         </div>
+
         <div className="modal-footer">
           <button className="btn-secondary" onClick={onClose}>Cancelar</button>
           <button className="btn-primary" onClick={handleSubmit} disabled={loading}>
@@ -174,18 +255,18 @@ function PublishModal({ onClose, onSuccess }) {
   );
 }
 
-export default function ProductsView() {
-  const [products,     setProducts]     = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState('');
-  const [search,       setSearch]       = useState('');
-  const [category,     setCategory]     = useState('');
-  const [showModal,    setShowModal]    = useState(false);
-  const [notification, setNotif]        = useState(null);
-  const [sortBy,       setSortBy]       = useState('reciente');
+export default function ProductsView({ isLogged, onOpenLogin }) {
+  const [products,     setProducts]  = useState([]);
+  const [loading,      setLoading]   = useState(true);
+  const [error,        setError]     = useState('');
+  const [search,       setSearch]    = useState('');
+  const [category,     setCategory]  = useState('');
+  const [showModal,    setShowModal] = useState(false);
+  const [notification, setNotif]     = useState(null);
+  const [sortBy,       setSortBy]    = useState('reciente');
   const searchRef = useRef();
 
-  const currentUserEmail = localStorage.getItem('userEmail');
+  const currentUserId = localStorage.getItem('userId');
 
   async function loadProducts() {
     setLoading(true); setError('');
@@ -194,8 +275,11 @@ export default function ProductsView() {
       if (search)   params.search   = search;
       if (category) params.category = category;
       setProducts(await getProducts(params));
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadProducts(); }, [category]);
@@ -206,8 +290,14 @@ export default function ProductsView() {
   }
 
   async function handleRate(slug, stars) {
-    try { await rateProduct(slug, stars); notify('Calificación registrada'); loadProducts(); }
-    catch (e) { notify(e.message, 'error'); }
+    if (!isLogged) { onOpenLogin?.(); return; }
+    try {
+      await rateProduct(slug, stars);
+      notify('Calificación registrada');
+      loadProducts();
+    } catch (e) {
+      notify(e.message, 'error');
+    }
   }
 
   async function handleAddCart(slug) {
@@ -220,13 +310,15 @@ export default function ProductsView() {
       await deleteProduct(slug);
       notify('Producto eliminado');
       setProducts((prev) => prev.filter((p) => p.slug !== slug));
-    } catch (e) { notify(e.message, 'error'); }
+    } catch (e) {
+      notify(e.message, 'error');
+    }
   }
 
   const sorted = [...products].sort((a, b) => {
     if (sortBy === 'precio-asc')  return a.price - b.price;
     if (sortBy === 'precio-desc') return b.price - a.price;
-    if (sortBy === 'rating')      return (b._avg?.stars ?? 0) - (a._avg?.stars ?? 0);
+    if (sortBy === 'rating')      return (Number(b.avg_rating) || 0) - (Number(a.avg_rating) || 0);
     return 0;
   });
 
@@ -238,26 +330,41 @@ export default function ProductsView() {
         </div>
       )}
 
+      {/* Header */}
       <div className="view-header">
         <div>
           <h1 className="view-title">Explorar productos</h1>
           <p className="view-sub">Encuentra lo que buscas entre miles de publicaciones</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowModal(true)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Publicar producto
+        <button
+          className={`btn-primary${!isLogged ? ' btn-primary--muted' : ''}`}
+          onClick={() => isLogged ? setShowModal(true) : onOpenLogin?.()}
+          title={!isLogged ? 'Inicia sesión para publicar un producto' : ''}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {isLogged ? 'Publicar producto' : 'Inicia sesión para publicar'}
         </button>
       </div>
 
+      {/* Filtros */}
       <div className="filters-bar">
         <div className="filters-top">
           <div className="search-wrap">
             <span className="search-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
             </span>
-            <input ref={searchRef} value={search} onChange={(e) => setSearch(e.target.value)}
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && loadProducts()}
-              placeholder="Buscar productos…" className="search-input" />
+              placeholder="Buscar productos…"
+              className="search-input"
+            />
             <button className="search-btn" onClick={loadProducts}>Buscar</button>
           </div>
           <div className="sort-wrap">
@@ -270,11 +377,22 @@ export default function ProductsView() {
             </select>
           </div>
         </div>
+
         <div className="category-chips">
-          {['', ...CATEGORIES].map((c) => (
-            <button key={c} className={`chip${category === c ? ' chip--active' : ''}`} onClick={() => setCategory(c)}>
-              {c && <CategoryIcon category={c} className="chip-icon" />}
-              {c ? labelCategory(c) : 'Todos'}
+          <button
+            className={`chip${category === '' ? ' chip--active' : ''}`}
+            onClick={() => setCategory('')}
+          >
+            Todos
+          </button>
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.value}
+              className={`chip${category === c.value ? ' chip--active' : ''}`}
+              onClick={() => setCategory(c.value)}
+            >
+              <CategoryIcon category={c.value} className="chip-icon" />
+              {c.label}
             </button>
           ))}
         </div>
@@ -282,8 +400,10 @@ export default function ProductsView() {
 
       {!loading && !error && (
         <p className="results-count">
-          {sorted.length === 0 ? 'Sin resultados'
-            : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''} encontrado${sorted.length !== 1 ? 's' : ''}`}
+          {sorted.length === 0
+            ? 'Sin resultados'
+            : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''} encontrado${sorted.length !== 1 ? 's' : ''}`
+          }
         </p>
       )}
 
@@ -296,7 +416,11 @@ export default function ProductsView() {
       {!loading && error && (
         <div className="state-empty">
           <div className="state-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
           </div>
           <p>{error}</p>
           <button className="btn-secondary" onClick={loadProducts}>Reintentar</button>
@@ -306,7 +430,9 @@ export default function ProductsView() {
       {!loading && !error && sorted.length === 0 && (
         <div className="state-empty">
           <div className="state-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
           </div>
           <p>No se encontraron productos{search ? ` para "${search}"` : ''}.</p>
           <button className="btn-secondary" onClick={() => { setSearch(''); setCategory(''); loadProducts(); }}>
@@ -318,9 +444,15 @@ export default function ProductsView() {
       {!loading && !error && sorted.length > 0 && (
         <div className="products-grid">
           {sorted.map((p) => (
-            <ProductCard key={p.slug} product={p}
-              onRate={handleRate} onAddCart={handleAddCart} onDelete={handleDelete}
-              isOwner={currentUserEmail && p.sellerEmail === currentUserEmail}
+            <ProductCard
+              key={p.slug}
+              product={p}
+              onRate={handleRate}
+              onAddCart={handleAddCart}
+              onDelete={handleDelete}
+              isOwner={currentUserId && String(p.seller_id) === String(currentUserId)}
+              isLogged={isLogged}
+              onOpenLogin={onOpenLogin}
             />
           ))}
         </div>
@@ -329,19 +461,9 @@ export default function ProductsView() {
       {showModal && (
         <PublishModal
           onClose={() => setShowModal(false)}
-          onSuccess={() => { notify('Producto publicado'); loadProducts(); }}
+          onSuccess={() => { notify('¡Producto publicado!'); loadProducts(); }}
         />
       )}
     </div>
   );
-}
-
-export function labelCategory(cat) {
-  const map = {
-    ROPA:'Ropa', COMIDA:'Comida', ELECTRODOMESTICOS:'Electrodomésticos',
-    ELECTRONICA:'Electrónica', DEPORTES:'Deportes', LIBROS:'Libros',
-    HOGAR:'Hogar', BELLEZA:'Belleza', AUTOMOTRIZ:'Automotriz',
-    JUGUETES:'Juguetes', ARTE:'Arte', OTROS:'Otros',
-  };
-  return map[cat] ?? cat;
 }
