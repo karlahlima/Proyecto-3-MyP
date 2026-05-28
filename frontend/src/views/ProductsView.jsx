@@ -6,8 +6,8 @@ import './ProductsView.css';
 const CATEGORIES = [
   { value: 'Ropa',              label: 'Ropa'              },
   { value: 'Comida',            label: 'Comida'            },
-  { value: 'Electrodomésticos', label: 'Electrodomésticos' },
-  { value: 'Electrónica',       label: 'Electrónica'       },
+  { value: 'Electrodomesticos', label: 'Electrodomésticos' },
+  { value: 'Electronica',       label: 'Electrónica'       },
   { value: 'Deportes',          label: 'Deportes'          },
   { value: 'Libros',            label: 'Libros'            },
   { value: 'Hogar',             label: 'Hogar'             },
@@ -19,8 +19,10 @@ const CATEGORIES = [
 ];
 
 export function labelCategory(cat) {
-  const found = CATEGORIES.find(c => c.value === cat || c.value.toUpperCase() === cat?.toUpperCase());
-  return found?.label ?? cat ?? 'Otros';
+  if (!cat) return 'Otros';
+  const normalize = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  const found = CATEGORIES.find(c => normalize(c.value) === normalize(cat));
+  return found?.label ?? cat;
 }
 
 function StarRating({ value = 0, interactive = false, onChange }) {
@@ -266,7 +268,7 @@ function PublishModal({ onClose, onSuccess }) {
             <input
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
-              placeholder="Ej: Tenis Nike Air Max"
+              placeholder="Nombre..."
             />
           </div>
 

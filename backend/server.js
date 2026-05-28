@@ -3,10 +3,12 @@ const express = require('express');
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const User    = require('./Models/User');
-const pool = require('./db');
+const Product = require('./Models/Product');
+const pool    = require('./db');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'cambiar_en_produccion';
 
@@ -95,13 +97,13 @@ app.post('/auth/login', async (req, res) => {
 
         const userRecord = await User.findUserOrEmail(searchKey);
         if (!userRecord) {
-            return res.status(401).json({ message: 'Email inválido.' });
+            return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
 
         const passwordHash  = userRecord.password_hash || userRecord.passwordHash;
         const passwordMatch = await bcrypt.compare(password, passwordHash);
         if (!passwordMatch) {
-            return res.status(401).json({ message: 'Contraseña inválida.' });
+            return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
 
         const { password_hash, ...safeUser } = userRecord;
@@ -184,11 +186,8 @@ app.get('/users/me/purchases', auth, async (req, res) => {
 
 app.get('/users/me/listings', auth, async (req, res) => {
     try {
-        const { rows } = await pool.query(
-            'SELECT * FROM products WHERE seller_id = $1 ORDER BY created_at DESC',
-            [req.user.id]
-        );
-        return res.json(rows);
+        const products = await Product.findBySeller(req.user.id);
+        return res.json(products);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Error interno del servidor.' });
@@ -250,29 +249,8 @@ app.delete('/users/me/cart/:cartItemId', auth, async (req, res) => {
 app.get('/products', async (req, res) => {
     try {
         const { category, search, seller } = req.query;
-        const conditions = [];
-        const values     = [];
-        let i = 1;
-
-        if (category) { conditions.push(`UPPER(p.category) = UPPER($${i++})`); values.push(category); }
-        if (search)   { conditions.push(`p.title ILIKE $${i++}`);              values.push(`%${search}%`); }
-        if (seller)   { conditions.push(`p.seller_id = $${i++}`);              values.push(Number(seller)); }
-
-        const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
-        const { rows } = await pool.query(
-            `SELECT p.*, u.name AS seller_name,
-                    ROUND(AVG(r.stars), 1) AS avg_rating,
-                    COUNT(DISTINCT r.id)   AS rating_count
-             FROM products p
-             JOIN users u ON u.id = p.seller_id
-             LEFT JOIN ratings r ON r.product_slug = p.slug
-             ${where}
-             GROUP BY p.id, u.name
-             ORDER BY p.created_at DESC`,
-            values
-        );
-        return res.json(rows);
+        const products = await Product.findAll({ category, search, seller });
+        return res.json(products);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Error interno del servidor.' });
@@ -281,19 +259,9 @@ app.get('/products', async (req, res) => {
 
 app.get('/products/:slug', async (req, res) => {
     try {
-        const { rows } = await pool.query(
-            `SELECT p.*, u.name AS seller_name,
-                    ROUND(AVG(r.stars), 1) AS avg_rating,
-                    COUNT(DISTINCT r.id)   AS rating_count
-             FROM products p
-             JOIN users u ON u.id = p.seller_id
-             LEFT JOIN ratings r ON r.product_slug = p.slug
-             WHERE p.slug = $1
-             GROUP BY p.id, u.name`,
-            [req.params.slug]
-        );
-        if (!rows.length) return res.status(404).json({ message: 'Producto no encontrado.' });
-        return res.json(rows[0]);
+        const product = await Product.findBySlug(req.params.slug);
+        if (!product) return res.status(404).json({ message: 'Producto no encontrado.' });
+        return res.json(product);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Error interno del servidor.' });
@@ -308,30 +276,36 @@ app.post('/products', auth, async (req, res) => {
         }
 
         const categoryMap = {
-            'ropa':'ROPA', 'comida':'COMIDA', 'electrodomésticos':'ELECTRODOMESTICOS',
-            'electrodomesticos':'ELECTRODOMESTICOS', 'electrónica':'ELECTRONICA',
-            'electronica':'ELECTRONICA', 'deportes':'DEPORTES', 'libros':'LIBROS',
-            'hogar':'HOGAR', 'belleza':'BELLEZA', 'automotriz':'AUTOMOTRIZ',
-            'juguetes':'JUGUETES', 'arte':'ARTE', 'otros':'OTROS',
+            'ropa':'ROPA', 'comida':'COMIDA',
+            'electrodomesticos':'ELECTRODOMESTICOS',
+            'electronica':'ELECTRONICA',
+            'deportes':'DEPORTES', 'libros':'LIBROS',
+            'hogar':'HOGAR', 'belleza':'BELLEZA',
+            'automotriz':'AUTOMOTRIZ', 'juguetes':'JUGUETES',
+            'arte':'ARTE', 'otros':'OTROS',
+            'electrodomésticos':'ELECTRODOMESTICOS', //por si se me pasó algún acento
+            'electrónica':'ELECTRONICA',
         };
+
         const normalizedCategory = category
             ? (categoryMap[category.toLowerCase()] ?? category.toUpperCase())
             : 'OTROS';
 
         let slug = slugify(title);
-        const { rows: existing } = await pool.query(
-            'SELECT id FROM products WHERE slug = $1', [slug]
-        );
-        if (existing.length) slug = `${slug}-${Date.now()}`;
+        const existing = await Product.findBySlug(slug);
+        if (existing) slug = `${slug}-${Date.now()}`;
 
-        const { rows } = await pool.query(
-            `INSERT INTO products (slug, title, description, price, category, stock, seller_id, image_url)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING *`,
-            [slug, title, description ?? null, Number(price),
-             normalizedCategory, stock ?? 1, req.user.id, image_url ?? null]
-        );
-        return res.status(201).json(rows[0]);
+        const product = await Product.create({
+            slug,
+            title,
+            description,
+            price,
+            category: normalizedCategory,
+            stock,
+            sellerId:  req.user.id,
+            imageUrl:  image_url,
+        });
+        return res.status(201).json(product);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Error interno del servidor.' });
@@ -340,34 +314,18 @@ app.post('/products', auth, async (req, res) => {
 
 app.patch('/products/:slug', auth, async (req, res) => {
     try {
-        const { rows: found } = await pool.query(
-            'SELECT * FROM products WHERE slug = $1', [req.params.slug]
-        );
-        if (!found.length) return res.status(404).json({ message: 'Producto no encontrado.' });
-        if (found[0].seller_id !== req.user.id) {
+        const product = await Product.findBySlug(req.params.slug);
+        if (!product) return res.status(404).json({ message: 'Producto no encontrado.' });
+        if (product.seller_id !== req.user.id) {
             return res.status(403).json({ message: 'No autorizado.' });
         }
 
         const { title, description, price, category, stock, image_url } = req.body;
-        const fields = [];
-        const values = [];
-        let i = 1;
-
-        if (title       !== undefined) { fields.push(`title       = $${i++}`); values.push(title); }
-        if (description !== undefined) { fields.push(`description = $${i++}`); values.push(description); }
-        if (price       !== undefined) { fields.push(`price       = $${i++}`); values.push(Number(price)); }
-        if (category    !== undefined) { fields.push(`category    = $${i++}`); values.push(category); }
-        if (stock       !== undefined) { fields.push(`stock       = $${i++}`); values.push(Number(stock)); }
-        if (image_url   !== undefined) { fields.push(`image_url   = $${i++}`); values.push(image_url); }
-
-        if (!fields.length) return res.status(400).json({ message: 'Nada que actualizar.' });
-
-        values.push(req.params.slug);
-        const { rows } = await pool.query(
-            `UPDATE products SET ${fields.join(', ')} WHERE slug = $${i} RETURNING *`,
-            values
-        );
-        return res.json(rows[0]);
+        const updated = await Product.update(req.params.slug, {
+            title, description, price, category, stock, imageUrl: image_url,
+        });
+        if (!updated) return res.status(400).json({ message: 'Nada que actualizar.' });
+        return res.json(updated);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Error interno del servidor.' });
@@ -376,15 +334,13 @@ app.patch('/products/:slug', auth, async (req, res) => {
 
 app.delete('/products/:slug', auth, async (req, res) => {
     try {
-        const { rows } = await pool.query(
-            'SELECT seller_id FROM products WHERE slug = $1', [req.params.slug]
-        );
-        if (!rows.length) return res.status(404).json({ message: 'Producto no encontrado.' });
-        if (rows[0].seller_id !== req.user.id) {
+        const product = await Product.findBySlug(req.params.slug);
+        if (!product) return res.status(404).json({ message: 'Producto no encontrado.' });
+        if (product.seller_id !== req.user.id) {
             return res.status(403).json({ message: 'No autorizado.' });
         }
 
-        await pool.query('DELETE FROM products WHERE slug = $1', [req.params.slug]);
+        await Product.delete(req.params.slug);
         return res.status(204).send();
     } catch (error) {
         console.error(error);

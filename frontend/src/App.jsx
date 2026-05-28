@@ -21,7 +21,7 @@ function EyeIcon({ open }) {
 }
 
 function PasswordInput({ value, onChange, placeholder = '••••••••', minLength }) {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
 
   return (
     <div className="password-wrap">
@@ -146,7 +146,7 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
             {error && <p className="auth-error">{error}</p>}
             <form onSubmit={handleRegister}>
               <div className="auth-field">
-                <label>Nombre completo</label>
+                <label>Nombre Completo</label>
                 <input
                   type="text"
                   placeholder="Nombre"
