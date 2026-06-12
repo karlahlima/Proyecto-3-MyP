@@ -155,7 +155,7 @@ export default function ProductsView() {
           </div>
         </div>
 
-        {/* ── Estados de la UI simplificados ── */}
+        {/* ── Estados de la UI  ── */}
         {loading && <SkeletonGrid count={8} />}
 
         {!loading && error && (

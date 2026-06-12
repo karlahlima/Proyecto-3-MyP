@@ -273,4 +273,36 @@ body {
   display: block;
 }
 
+.cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  width: 36px;
+  height: 36px;
+  position: relative;
+  cursor: pointer;
+  background: transparent;
+}
+.cart-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--accent);
+  color: var(--cream);
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cream);
+}
+
 .field--stock { flex: 0 0 80px; }

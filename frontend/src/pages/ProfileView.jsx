@@ -1,4 +1,5 @@
 import {useState, useEffect} from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {getMyProfile, getMyPurchases, getMyListings, getMyCart, removeFromCart} from '../services/api.js';
 import {useAuth} from '../contexts/AuthContext.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
@@ -133,7 +134,7 @@ function MyCart() {
         setLoading(true);
         try {
             setItems(await getMyCart());
-        } catch {/* silencioso */
+        } catch {/* silencioso i.e no hacer nada*/
         } finally {
             setLoading(false);
         }
@@ -148,6 +149,7 @@ function MyCart() {
         try {
             await removeFromCart(id);
             setItems((prev) => prev.filter((i) => i.id !== id));
+            window.dispatchEvent(new Event('cartUpdated'));
         } catch {/* silencioso */
         } finally {
             setRemoving(null);
@@ -205,9 +207,10 @@ function MyCart() {
 
 export default function ProfileView() {
     const {isAuthenticated, logout} = useAuth();
+    const [searchParams] = useSearchParams();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState('info');
+    const [tab, setTab] = useState(searchParams.get('tab') || 'info');
     const [counts, setCounts] = useState({listings: 0, purchases: 0});
 
     async function loadUser() {

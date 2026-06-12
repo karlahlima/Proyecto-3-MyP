@@ -55,6 +55,7 @@ export default function ProductCard({product, onRate, onAddCart, onDelete}) {
         try {
             await onAddCart(product.slug);
             setAdded(true);
+            window.dispatchEvent(new Event('cartUpdated'));
             setTimeout(() => setAdded(false), 2000);
         } catch (err) {
             console.error(err);
