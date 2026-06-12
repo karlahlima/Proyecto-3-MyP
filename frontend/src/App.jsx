@@ -190,8 +190,8 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
                 <PasswordInput
                   value={regForm.password}
                   onChange={(e) => setR('password', e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  minLength={8}
+                  placeholder="Mínimo 6 caracteres"
+                  minLength={6}
                 />
               </div>
               <button type="submit" className="auth-submit" disabled={loading}>
