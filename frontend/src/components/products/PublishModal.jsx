@@ -70,7 +70,7 @@ export default function PublishModal({ onClose, onSuccess }) {
                     {error && <p className="form-error">{error}</p>}
 
                     <div className="field">
-                        <label>Imagen del producto <span className="field-optional">(opcional, máx 2 MB)</span></label>
+                        <label>Imagen del producto (máx 10 MB)</label>
                         <div className={`image-picker${preview ? ' image-picker--filled' : ''}`} onClick={() => fileRef.current?.click()}>
                             {preview ? (
                                 <>
