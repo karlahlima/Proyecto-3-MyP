@@ -21,18 +21,10 @@ async function request(path, options = {}) {
 // AUTH
 
 export async function login({ email, password }) {
-    const data = await request('/auth/login', {
+    return request('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     });
-    if (data.token) {
-        localStorage.setItem('token',      data.token);
-        localStorage.setItem('userId', data.user?.id ?? '');
-        localStorage.setItem('userName',   data.user?.name  ?? '');
-        localStorage.setItem('userUsername', data.user?.username ?? '');
-        localStorage.setItem('userEmail',  data.user?.email ?? email);
-    }
-    return data;
 }
 
 /**
@@ -41,21 +33,13 @@ export async function login({ email, password }) {
  * @param param0 Objeto con los datos capturados para el registro de un usuario
  */
 export async function register({ name, email, username, age, password }) {
-    const data = await request('/auth/register', {
+    return request('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ name, email, username, age: Number(age), password }),
     });
-    if (data.token) {
-        localStorage.setItem('token',      data.token);
-        localStorage.setItem('userId', data.user?.id ?? '');
-        localStorage.setItem('userName',   data.user?.name  ?? name);
-        localStorage.setItem('userUsername', data.user?.username ?? '');
-        localStorage.setItem('userEmail',  data.user?.email ?? email);
-    }
-    return data;
 }
 
-export function logout() {
+export function clearAuthStorage() {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('userName');

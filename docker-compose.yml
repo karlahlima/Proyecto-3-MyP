@@ -9,6 +9,8 @@ services:
       POSTGRES_USER:     ${POSTGRES_USER:-tradinn}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tradinn_pass}
       POSTGRES_DB:       ${POSTGRES_DB:-tradinn_db}
+    volumes:
+      - db_data:/var/lib/postgresql/data
     networks:
       - backend_net
     healthcheck:
@@ -36,8 +38,8 @@ services:
 
   nginx:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3001}:80"
@@ -52,3 +54,6 @@ networks:
     internal: true
   frontend_net:
     driver: bridge
+
+volumes:
+  db_data:

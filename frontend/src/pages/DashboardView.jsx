@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { getMyListings, getMyPurchases, getMyCart, getProducts } from '../services/api';
+import { getMyListings, getMyPurchases, getMyCart } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import StatCard from '../components/dashboard/StatCard';
+import BarChart from '../components/dashboard/BarChart';
+import ActivityRow from '../components/dashboard/ActivityRow';
 import CategoryIcon from '../components/CategoryIcon';
 import './DashboardView.css';
 
 function labelCategory(cat) {
   const map = {
-    ROPA:'Ropa', COMIDA:'Comida', ELECTRODOMÉSTICOS:'Electrodomésticos',
-    ELECTRÓNICA:'Electrónica', DEPORTES:'Deportes', LIBROS:'Libros',
+    ROPA:'Ropa', COMIDA:'Comida', ELECTRODOMESTICOS:'Electrodomésticos',
+    ELECTRONICA:'Electrónica', DEPORTES:'Deportes', LIBROS:'Libros',
     HOGAR:'Hogar', BELLEZA:'Belleza', AUTOMOTRIZ:'Automotriz',
     JUGUETES:'Juguetes', ARTE:'Arte', OTROS:'Otros',
   };
@@ -15,72 +19,25 @@ function labelCategory(cat) {
 
 function fmt(n) { return Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
-function StatCard({ icon, label, value, sub, accent }) {
-  return (
-    <div className={`stat-card${accent ? ' stat-card--accent' : ''}`}>
-      <div className="stat-icon">{icon}</div>
-      <div className="stat-body">
-        <span className="stat-value">{value}</span>
-        <span className="stat-label">{label}</span>
-        {sub && <span className="stat-sub">{sub}</span>}
-      </div>
-    </div>
-  );
-}
-
-function BarChart({ data }) {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  return (
-    <div className="bar-chart">
-      {data.map((d) => (
-        <div key={d.label} className="bar-col">
-          <div className="bar-track">
-            <div
-              className="bar-fill"
-              style={{ height: `${(d.value / max) * 100}%` }}
-              title={`${d.label}: ${d.value}`}
-            />
-          </div>
-          <span className="bar-label">
-            <CategoryIcon category={d.label} className="bar-cat-icon" />
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ActivityRow({ icon, title, sub, value, badge }) {
-  return (
-    <div className="activity-row">
-      <div className="activity-icon">{icon}</div>
-      <div className="activity-info">
-        <span className="activity-title">{title}</span>
-        <span className="activity-sub">{sub}</span>
-      </div>
-      <div className="activity-right">
-        {value && <span className="activity-value">{value}</span>}
-        {badge && <span className={`activity-badge activity-badge--${badge.type}`}>{badge.label}</span>}
-      </div>
-    </div>
-  );
-}
 
 export default function DashboardView() {
-  const [listings,   setListings]   = useState([]);
-  const [purchases,  setPurchases]  = useState([]);
-  const [cart,       setCart]       = useState([]);
-  const [allProds,   setAllProds]   = useState([]);
-  const [loading,    setLoading]    = useState(true);
+  const { user, isAuthenticated } = useAuth(); // <-- Fuente de verdad única
+  const [listings, setListings] = useState([]);
+  const [purchases, setPurchases] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     Promise.allSettled([
-      getMyListings().then(setListings),
-      getMyPurchases().then(setPurchases),
-      getMyCart().then(setCart),
-      getProducts().then(setAllProds),
+      getMyListings().then(setListings).catch(() => []),
+      getMyPurchases().then(setPurchases).catch(() => []),
+      getMyCart().then(setCart).catch(() => [])
     ]).finally(() => setLoading(false));
-  }, []);
+  }, [isAuthenticated]);
 
   const totalRevenue  = listings.reduce((s, p) => s + Number(p.price ?? 0), 0);
   const totalSpent    = purchases.reduce((s, p) => s + Number(p.totalPrice ?? 0), 0);
@@ -111,85 +68,57 @@ export default function DashboardView() {
 
   if (loading) {
     return (
-      <div className="dashboard-view">
-        <div className="dash-skeleton-grid">
-          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="dash-skeleton-stat" />)}
+        <div className="dashboard-view">
+          <div className="dash-skeleton-grid">
+            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="dash-skeleton-stat" />)}
+          </div>
         </div>
-        <div className="dash-skeleton-body" />
-      </div>
     );
   }
 
-  const userName  = localStorage.getItem('userName')  ?? 'Usuario';
-  const userEmail = localStorage.getItem('userEmail') ?? null;
-  const token     = localStorage.getItem('token');
-  const isLogged  = Boolean(token);
+  if (!isAuthenticated) {
+    return (
+        <div className="dashboard-view">
+          <div className="section-empty">
+            <p>Debes iniciar sesión para ver el panel de control.</p>
+            <a href="/" className="btn-primary">Ir al inicio</a>
+          </div>
+        </div>
+    );
+  }
 
   return (
-    <div className="dashboard-view">
-      {/* ── Header ── */}
-      <div className="dash-header">
-        <div>
-          <h1 className="dash-title">Panel de control</h1>
-          <p className="dash-sub">Resumen de tu actividad en Tradinn</p>
-        </div>
-        <a href="/productos" className="btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Explorar productos
-        </a>
-      </div>
-
-      {/* ── Panel de sesión ── */}
-      <div className="session-hero">
-        <div className="session-main panel">
-          <span className="session-eyebrow">Inicio de sesión</span>
-          <h2 className="session-title">
-            Bienvenido, <em>{userName}</em>
-          </h2>
-          <p className="session-desc">
-            {isLogged
-              ? 'Tu sesión está activa. Puedes explorar, comprar y gestionar tus publicaciones.'
-              : 'No hay una sesión activa. Inicia sesión para ver tus datos.'}
-          </p>
-
-          <div className={`session-status${isLogged ? '' : ' session-status--off'}`}>
-            <span className={`session-dot${isLogged ? '' : ' session-dot--off'}`} />
-            {isLogged ? 'Sesión iniciada correctamente' : 'Sin sesión activa'}
+      <div className="dashboard-view">
+        <div className="dash-header">
+          <div>
+            <h1 className="dash-title">Panel de control</h1>
+            <p className="dash-sub">Resumen de tu actividad en Tradinn</p>
           </div>
+          <a href="/productos" className="btn-primary">Explorar productos</a>
+        </div>
 
-          <div className="session-cards">
-            <div className="session-card">
-              <span className="session-card-num">{isLogged ? '200' : '401'}</span>
-              <span className="session-card-label">Respuesta</span>
+        {/* Panel de sesión limpio (sin mocks de 200/401) */}
+        <div className="session-hero">
+          <div className="session-main panel">
+            <span className="session-eyebrow">Sesión Activa</span>
+            <h2 className="session-title">Bienvenido, <em>{user?.name ?? 'Usuario'}</em></h2>
+            <p className="session-desc">Tu sesión está activa. Puedes explorar, comprar y gestionar tus publicaciones.</p>
+            <div className="session-status">
+              <span className="session-dot" />
+              Sesión iniciada correctamente
             </div>
-            <div className="session-card">
-              <span className="session-card-num">{isLogged ? 'OK' : '—'}</span>
-              <span className="session-card-label">Estado</span>
+          </div>
+          <div className="session-aside">
+            <div className="panel session-detail-panel">
+              <span className="label">Detalles de cuenta</span>
+              <div className="session-list">
+                <div className="session-row"><span>Usuario</span><span>{user?.username ?? 'N/A'}</span></div>
+                <div className="session-row"><span>Correo</span><span>{user?.email ?? 'N/A'}</span></div>
+                <div className="session-row"><span>Miembro desde</span><span>{new Date(user?.created_at).toLocaleDateString('es-MX')}</span></div>
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="session-aside">
-          <div className="panel session-detail-panel">
-            <span className="label">Detalles de sesión</span>
-            <div className="session-list">
-              <div className="session-row"><span>Endpoint</span><span>/login</span></div>
-              <div className="session-row"><span>Usuario</span><span>{userName}</span></div>
-              {userEmail && <div className="session-row"><span>Correo</span><span>{userEmail}</span></div>}
-              <div className="session-row"><span>Token</span><span>{isLogged ? 'Presente' : 'Ausente'}</span></div>
-            </div>
-          </div>
-
-          <div className="panel session-detail-panel">
-            <span className="label">Próximos pasos</span>
-            <div className="session-list">
-              <div className="session-row"><span>1</span><span>Explorar productos</span></div>
-              <div className="session-row"><span>2</span><span>Publicar artículos</span></div>
-              <div className="session-row"><span>3</span><span>Ver tu perfil</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ── Stats ── */}
       <div className="stat-grid">
