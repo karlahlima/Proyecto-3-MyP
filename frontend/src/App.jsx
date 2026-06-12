@@ -156,6 +156,15 @@ function AuthModal({ defaultTab = 'login', onClose, onSuccess }) {
                 />
               </div>
               <div className="auth-field">
+                <label>Nombre de usuario <span className="text-muted">(opcional)</span></label>
+                <input
+                    type="text"
+                    placeholder="nombre_de_usuario"
+                    value={regForm.username}
+                    onChange={(e) => setR('username', e.target.value)}
+                />
+              </div>
+              <div className="auth-field">
                 <label>Email</label>
                 <input
                   type="email"
