@@ -117,8 +117,16 @@ export async function addToCart(productSlug, quantity = 1) {
     });
 }
 
+// TODO: actualizar la UI al eliminar
 export async function removeFromCart(cartItemId) {
     return request(`/users/me/cart/${cartItemId}`, { method: 'DELETE' });
+}
+
+export async function checkoutCart(paymentData) {
+    return request('/users/me/cart/checkout', {
+        method: 'POST',
+        body: JSON.stringify(paymentData),
+    });
 }
 
 // COMENTARIOS

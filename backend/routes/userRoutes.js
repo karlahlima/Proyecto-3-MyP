@@ -107,4 +107,57 @@ router.delete('/me/cart/:cartItemId', auth, asyncHandler(async (req, res) => {
     return res.status(204).send();
 }));
 
+router.post('/me/cart/checkout', auth, asyncHandler(async (req, res) => {
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Obtener los items actuales del carrito con sus precios
+        const { rows: cartItems } = await client.query(
+            `SELECT ci.id, ci.quantity, p.slug, p.price, p.title
+             FROM cart_items ci
+             JOIN products p ON p.slug = ci.product_slug
+             WHERE ci.user_id = $1`,
+            [req.user.id]
+        );
+
+        if (cartItems.length === 0) {
+            return res.status(400).json({ message: 'El carrito está vacío.' });
+        }
+
+        // Registrar cada item en la tabla de compras (purchases)
+        for (const item of cartItems) {
+            const totalPrice = Number(item.price) * Number(item.quantity);
+            await client.query(
+                `INSERT INTO purchases (buyer_id, product_slug, quantity, total_price, bought_at)
+                 VALUES ($1, $2, $3, $4, NOW())`,
+                [req.user.id, item.slug, item.quantity, totalPrice]
+            );
+
+            // Descontar la cantidad del stock del producto
+            await client.query(
+                `UPDATE products SET stock = stock - $1 WHERE slug = $2`,
+                [item.quantity, item.slug]
+            );
+        }
+
+        // Vaciar el carrito del usuario
+        await client.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id]);
+
+        await client.query('COMMIT');
+
+        return res.status(200).json({
+            success: true,
+            message: 'Compra realizada con éxito.'
+        });
+    } catch (error) {
+        await client.query('ROLLBACK'); // Revertir cambios si algo falla
+        console.error('Error en checkout:', error);
+        return res.status(500).json({ message: 'Error al procesar la compra en el servidor.' });
+    } finally {
+        client.release();
+    }
+}));
+
 module.exports = router;
