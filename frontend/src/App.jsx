@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import ProductsView from './views/ProductsView';
 import ProfileView from './views/ProfileView';
 import AuthModal from './components/auth/AuthModal';
