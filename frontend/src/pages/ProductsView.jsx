@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { getProducts, rateProduct, addToCart, deleteProduct } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import ProductCard from '../components/products/ProductCard';
-import PublishModal from '../components/products/PublishModal';
-import CategoryIcon from '../components/CategoryIcon';
+import { getProducts, rateProduct, addToCart, deleteProduct } from '../services/api.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import ProductCard from '../components/products/ProductCard.jsx';
+import PublishModal from '../components/products/PublishModal.jsx';
+import CategoryIcon from '../components/CategoryIcon.jsx';
+import EmptyState from '../components/ui/EmptyState.jsx';
+import SkeletonGrid from '../components/ui/SkeletonGrid.jsx';
 import './ProductsView.css';
 
 const CATEGORIES = [
@@ -90,7 +92,11 @@ export default function ProductsView() {
 
   return (
       <div className="products-view">
-        {notification && <div className={`toast${notification.type === 'error' ? ' toast--error' : ''}`}>{notification.msg}</div>}
+        {notification && (
+            <div className={`toast${notification.type === 'error' ? ' toast--error' : ''}`}>
+              {notification.msg}
+            </div>
+        )}
 
         <div className="view-header">
           <div>
@@ -116,7 +122,11 @@ export default function ProductsView() {
                   placeholder="Buscar productos…"
                   className="search-input search-input--full"
               />
-              {search && <button className="search-clear" onClick={() => { setSearch(''); loadProducts('', category); }}>✕</button>}
+              {search && (
+                  <button className="search-clear" onClick={() => { setSearch(''); loadProducts('', category); }}>
+                    ✕
+                  </button>
+              )}
             </div>
             <div className="sort-wrap">
               <select className="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -129,9 +139,15 @@ export default function ProductsView() {
           </div>
 
           <div className="category-chips">
-            <button className={`chip${category === '' ? ' chip--active' : ''}`} onClick={() => setCategory('')}>Todos</button>
+            <button className={`chip${category === '' ? ' chip--active' : ''}`} onClick={() => setCategory('')}>
+              Todos
+            </button>
             {CATEGORIES.map((c) => (
-                <button key={c.value} className={`chip${category === c.value ? ' chip--active' : ''}`} onClick={() => setCategory(c.value)}>
+                <button
+                    key={c.value}
+                    className={`chip${category === c.value ? ' chip--active' : ''}`}
+                    onClick={() => setCategory(c.value)}
+                >
                   <CategoryIcon category={c.value} className="chip-icon" />
                   {c.label}
                 </button>
@@ -139,31 +155,54 @@ export default function ProductsView() {
           </div>
         </div>
 
-        {loading && <div className="skeleton-grid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton-card" />)}</div>}
+        {/* ── Estados de la UI simplificados ── */}
+        {loading && <SkeletonGrid count={8} />}
 
         {!loading && error && (
-            <div className="state-empty">
-              <p>{error}</p>
-              <button className="btn-secondary" onClick={() => loadProducts(search, category)}>Reintentar</button>
-            </div>
+            <EmptyState
+                iconType="error"
+                title="Error al cargar productos"
+                description={error}
+                actionLabel="Reintentar"
+                onAction={() => loadProducts(search, category)}
+            />
         )}
 
         {!loading && !error && sorted.length === 0 && (
-            <div className="state-empty">
-              <p>No se encontraron productos{search ? ` para "${search}"` : ''}.</p>
-              <button className="btn-secondary" onClick={() => { setSearch(''); setCategory(''); loadProducts(); }}>Limpiar filtros</button>
-            </div>
+            <EmptyState
+                iconType="search"
+                title="No se encontraron productos"
+                description={search ? `No hay resultados para "${search}". Intenta con otros términos.` : 'Ajusta los filtros para ver más opciones.'}
+                actionLabel="Limpiar filtros"
+                onAction={() => { setSearch(''); setCategory(''); loadProducts(); }}
+            />
         )}
 
         {!loading && !error && sorted.length > 0 && (
-            <div className="products-grid">
-              {sorted.map((p) => (
-                  <ProductCard key={p.slug} product={p} onRate={handleRate} onAddCart={handleAddCart} onDelete={handleDelete} />
-              ))}
-            </div>
+            <>
+              <p className="results-count">
+                {sorted.length} producto{sorted.length !== 1 ? 's' : ''} encontrado{sorted.length !== 1 ? 's' : ''}
+              </p>
+              <div className="products-grid">
+                {sorted.map((p) => (
+                    <ProductCard
+                        key={p.slug}
+                        product={p}
+                        onRate={handleRate}
+                        onAddCart={handleAddCart}
+                        onDelete={handleDelete}
+                    />
+                ))}
+              </div>
+            </>
         )}
 
-        {showModal && <PublishModal onClose={() => setShowModal(false)} onSuccess={() => { notify('¡Producto publicado!'); loadProducts(); }} />}
+        {showModal && (
+            <PublishModal
+                onClose={() => setShowModal(false)}
+                onSuccess={() => { notify('¡Producto publicado!'); loadProducts(); }}
+            />
+        )}
       </div>
   );
 }

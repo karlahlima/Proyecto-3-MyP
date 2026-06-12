@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, register as apiRegister, logout as apiLogout, getMyProfile } from '../services/api';
+import { login as apiLogin, register as apiRegister, clearAuthStorage, getMyProfile } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
             getMyProfile()
                 .then(userData => setUser(userData))
                 .catch(() => {
-                    localStorage.clear(); // Token inválido o expirado
+                    clearAuthStorage(); // Token inválido o expirado
                     setUser(null);
                 })
                 .finally(() => setLoading(false));
@@ -25,19 +25,29 @@ export function AuthProvider({ children }) {
 
     const login = async (credentials) => {
         const data = await apiLogin(credentials);
-        setUser(data.user);
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', String(data.user?.id ?? ''));
+            localStorage.setItem('userName', data.user?.name ?? '');
+            localStorage.setItem('userUsername', data.user?.username ?? '');
+            localStorage.setItem('userEmail', data.user?.email ?? '');
+            setUser(data.user);
+        }
         return data;
     };
 
     const register = async (userData) => {
         const data = await apiRegister(userData);
         // auto-login tras registro exitoso
-        setUser(data.user);
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            setUser(data.user);
+        }
         return data;
     };
 
     const logout = () => {
-        apiLogout();
+        clearAuthStorage();
         setUser(null);
     };
 

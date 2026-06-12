@@ -51,7 +51,7 @@ export default function ProductCard({product, onRate, onAddCart, onDelete}) {
     const rating = Number(product.avg_rating ?? product._avg?.stars ?? 0);
 
     async function handleCart() {
-        if (!isAuthenticated) return; // La UI ya debería ocultar/deshabilitar esto, pero es seguro
+        if (!isAuthenticated) return;
         try {
             await onAddCart(product.slug);
             setAdded(true);
