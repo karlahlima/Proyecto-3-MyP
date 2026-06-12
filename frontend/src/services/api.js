@@ -35,10 +35,15 @@ export async function login({ email, password }) {
     return data;
 }
 
-export async function register({ name, email, age, password }) {
+/**
+ * Función para registrar un usuario en el backend.
+ *
+ * @param param0 Objeto con los datos capturados para el registro de un usuario
+ */
+export async function register({ name, email, username, age, password }) {
     const data = await request('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name, email, age: Number(age), password }),
+        body: JSON.stringify({ name, email, username, age: Number(age), password }),
     });
     if (data.token) {
         localStorage.setItem('token',      data.token);
