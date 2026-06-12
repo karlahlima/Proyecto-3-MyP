@@ -9,20 +9,17 @@ Stack:
 
 ## Para ejecutar:
 
-1. Copiar el archivo de variables de entorno
-```cp .env.example .env```
-
-2. Construir y levantar
+1. Construir y levantar
 ```docker compose up --build```
 
-3. Abrir en el navegador
+2. Abrir en el navegador
 ```http://localhost:3001```
 
-4. Para detener
+3. Para detener
 ```docker compose down```
 
 * Para correr en segundo plano: 
 ```docker compose up --build```
 
 * Para borrar los datos de la db:
-```docker compose down```
+```docker volume prune```
