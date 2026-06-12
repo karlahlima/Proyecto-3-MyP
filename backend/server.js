@@ -364,15 +364,20 @@ app.post('/products', auth, async (req, res) => {
         }
 
         const categoryMap = {
-            'ropa': 'ROPA', 'comida': 'COMIDA',
+            'ropa':              'ROPA',
+            'comida':            'COMIDA',
             'electrodomesticos': 'ELECTRODOMESTICOS',
-            'electronica': 'ELECTRONICA',
-            'deportes': 'DEPORTES', 'libros': 'LIBROS',
-            'hogar': 'HOGAR', 'belleza': 'BELLEZA',
-            'automotriz': 'AUTOMOTRIZ', 'juguetes': 'JUGUETES',
-            'arte': 'ARTE', 'otros': 'OTROS',
-            'electrodomésticos': 'ELECTRODOMESTICOS', //por si se me pasó algún acento
-            'electrónica': 'ELECTRONICA',
+            'electronica':       'ELECTRONICA',
+            'deportes':          'DEPORTES',
+            'libros':            'LIBROS',
+            'hogar':             'HOGAR',
+            'belleza':           'BELLEZA',
+            'automotriz':        'AUTOMOTRIZ',
+            'juguetes':          'JUGUETES',
+            'arte':              'ARTE',
+            'otros':             'OTROS',
+            'electrodomésticos': 'ELECTRODOMESTICOS',
+            'electrónica':       'ELECTRONICA',
         };
 
         const normalizedCategory = category
