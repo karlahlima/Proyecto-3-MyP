@@ -32,7 +32,7 @@ class Product {
      * Arreglo de productos. Vacío si no hay resultados.
      */
     static async findAll({ category, search, seller } = {}) {
-        const conditions = [];
+        const conditions = ['p.stock > 0'];
         const values     = [];
         let i = 1;
 
@@ -40,7 +40,7 @@ class Product {
         if (search)   { conditions.push(`p.title ILIKE $${i++}`);              values.push(`%${search}%`); }
         if (seller)   { conditions.push(`p.seller_id = $${i++}`);              values.push(Number(seller)); }
 
-        const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+        const where = `WHERE ${conditions.join(' AND ')}`;
 
         const { rows } = await db.query(
             `SELECT p.*, u.name AS seller_name,
