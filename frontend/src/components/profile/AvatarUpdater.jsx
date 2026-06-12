@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { uploadAvatar } from '../../services/api';
 
-export default function AvatarUploader({ avatarUrl, name, onUploaded }) {
+export default function AvatarUpdater({ avatarUrl, name, onUploaded }) {
     const inputRef = useRef();
     const [preview, setPreview] = useState(avatarUrl);
     const [loading, setLoading] = useState(false);
