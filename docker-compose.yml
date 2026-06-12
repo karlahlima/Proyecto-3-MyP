@@ -38,8 +38,8 @@ services:
 
   nginx:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3001}:80"
