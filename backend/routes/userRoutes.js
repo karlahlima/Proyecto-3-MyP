@@ -7,7 +7,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 router.get('/me', auth, asyncHandler(async (req, res) => {
     const { rows } = await pool.query(
-        'SELECT id, name, email, username, age, created_at FROM users WHERE id = $1',
+        'SELECT id, name, email, username, age, avatar_url, created_at FROM users WHERE id = $1',
         [req.user.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Usuario no encontrado.' });
@@ -47,12 +47,35 @@ router.patch('/me', auth, asyncHandler(async (req, res) => {
 
     values.push(req.user.id);
     const { rows } = await pool.query(
-        `UPDATE users
-         SET ${fields.join(', ')}
-         WHERE id = $${i} RETURNING id, name, email, username, age, created_at`,
+        `UPDATE users SET ${fields.join(', ')} WHERE id = $${i}
+         RETURNING id, name, email, username, age, avatar_url, created_at`,
         values
     );
     return res.json(rows[0]);
+}));
+
+router.post('/me/avatar', auth, asyncHandler(async (req, res) => {
+    const { avatarBase64 } = req.body;
+
+    if (!avatarBase64 || typeof avatarBase64 !== 'string') {
+        return res.status(400).json({ message: 'Se requiere avatarBase64.' });
+    }
+
+    if (!avatarBase64.startsWith('data:image/')) {
+        return res.status(400).json({ message: 'Formato de imagen no válido.' });
+    }
+
+    if (avatarBase64.length > 2_800_000) {
+        return res.status(413).json({ message: 'La imagen es demasiado grande (máx. ~2 MB).' });
+    }
+
+    const { rows } = await pool.query(
+        `UPDATE users SET avatar_url = $1 WHERE id = $2
+         RETURNING id, name, email, username, age, avatar_url, created_at`,
+        [avatarBase64, req.user.id]
+    );
+
+    return res.json({ avatarUrl: rows[0].avatar_url });
 }));
 
 router.get('/me/purchases', auth, asyncHandler(async (req, res) => {
@@ -69,6 +92,32 @@ router.get('/me/purchases', auth, asyncHandler(async (req, res) => {
 
 router.get('/me/listings', auth, asyncHandler(async (req, res) => {
     const products = await Product.findBySeller(req.user.id);
+    return res.json(products);
+}));
+
+router.get('/me/sales', auth, asyncHandler(async (req, res) => {
+    const { rows: products } = await pool.query(
+        `SELECT DISTINCT p.slug, p.title, p.price, p.category, p.stock
+         FROM products p
+         JOIN purchases pu ON pu.product_slug = p.slug
+         WHERE p.seller_id = $1
+         ORDER BY p.title ASC`,
+        [req.user.id]
+    );
+
+    for (const product of products) {
+        const { rows: buyers } = await pool.query(
+            `SELECT u.id AS buyer_id, u.name AS buyer_name, u.email AS buyer_email,
+                    pu.quantity, pu.total_price, pu.bought_at
+             FROM purchases pu
+             JOIN users u ON u.id = pu.buyer_id
+             WHERE pu.product_slug = $1
+             ORDER BY pu.bought_at DESC`,
+            [product.slug]
+        );
+        product.buyers = buyers;
+    }
+
     return res.json(products);
 }));
 
@@ -108,14 +157,12 @@ router.delete('/me/cart/:cartItemId', auth, asyncHandler(async (req, res) => {
 }));
 
 router.post('/me/cart/checkout', auth, asyncHandler(async (req, res) => {
-
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
-        // Obtener los items actuales del carrito con sus precios
         const { rows: cartItems } = await client.query(
-            `SELECT ci.id, ci.quantity, p.slug, p.price, p.title
+            `SELECT ci.id, ci.quantity, p.slug, p.price, p.stock
              FROM cart_items ci
              JOIN products p ON p.slug = ci.product_slug
              WHERE ci.user_id = $1`,
@@ -123,10 +170,19 @@ router.post('/me/cart/checkout', auth, asyncHandler(async (req, res) => {
         );
 
         if (cartItems.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(400).json({ message: 'El carrito está vacío.' });
         }
 
-        // Registrar cada item en la tabla de compras (purchases)
+        for (const item of cartItems) {
+            if (item.stock < item.quantity) {
+                await client.query('ROLLBACK');
+                return res.status(409).json({
+                    message: `Stock insuficiente para "${item.slug}".`
+                });
+            }
+        }
+
         for (const item of cartItems) {
             const totalPrice = Number(item.price) * Number(item.quantity);
             await client.query(
@@ -134,25 +190,18 @@ router.post('/me/cart/checkout', auth, asyncHandler(async (req, res) => {
                  VALUES ($1, $2, $3, $4, NOW())`,
                 [req.user.id, item.slug, item.quantity, totalPrice]
             );
-
-            // Descontar la cantidad del stock del producto
             await client.query(
                 `UPDATE products SET stock = stock - $1 WHERE slug = $2`,
                 [item.quantity, item.slug]
             );
         }
 
-        // Vaciar el carrito del usuario
         await client.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id]);
-
         await client.query('COMMIT');
 
-        return res.status(200).json({
-            success: true,
-            message: 'Compra realizada con éxito.'
-        });
+        return res.status(200).json({ success: true, message: 'Compra realizada con éxito.' });
     } catch (error) {
-        await client.query('ROLLBACK'); // Revertir cambios si algo falla
+        await client.query('ROLLBACK');
         console.error('Error en checkout:', error);
         return res.status(500).json({ message: 'Error al procesar la compra en el servidor.' });
     } finally {

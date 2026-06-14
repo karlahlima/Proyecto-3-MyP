@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import {useSearchParams} from 'react-router-dom';
-import {getMyProfile, getMyPurchases, getMyListings, getMyCart, removeFromCart, checkoutCart} from '../services/api.js';
+import {getMyProfile, getMyPurchases, getMyListings, getMySales, getMyCart, removeFromCart, checkoutCart} from '../services/api.js';
 import {useAuth} from '../contexts/AuthContext.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import ProfileInfo from '../components/profile/ProfileInfo.jsx';
@@ -9,9 +9,12 @@ import './ProfileView.css';
 import SkeletonGrid from "../components/ui/SkeletonGrid.jsx";
 import AvatarUpdater from "../components/profile/AvatarUpdater.jsx";
 
-const TABS = [{id: 'info', label: 'Mi perfil'}, {id: 'listings', label: 'Publicaciones'}, {
-    id: 'purchases', label: 'Compras'
-}, {id: 'cart', label: 'Carrito'},];
+const TABS = [
+    {id: 'info', label: 'Mi perfil'}, 
+    {id: 'listings', label: 'Publicaciones'}, 
+    {id: 'purchases', label: 'Compras'},
+    {id: 'sales', label: 'Ventas'},
+    {id: 'cart', label: 'Carrito'},];
 
 function labelCategory(cat) {
     const map = {
@@ -120,6 +123,112 @@ function MyPurchases() {
           </span>
             <span className="list-item-badge badge-active">✓ Completada</span>
         </div>))}
+    </div>);
+}
+
+function SalesProductCard({ product }) {
+    const [expanded, setExpanded] = useState(false);
+    const hasBuyers = product.buyers?.length > 0;
+
+    const totalUnits = product.buyers.reduce((s, b) => s + Number(b.quantity), 0);
+    const totalRevenue = product.buyers.reduce((s, b) => s + Number(b.total_price), 0);
+
+    return (
+        <div className="list-item" style={{flexDirection: 'column', alignItems: 'stretch', gap: '0.6rem', cursor: hasBuyers ? 'pointer' : 'default'}}
+             onClick={() => hasBuyers && setExpanded((e) => !e)}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '1rem', width: '100%'}}>
+                <div className="list-item-cat">{labelCategory(product.category)}</div>
+                <div className="list-item-info">
+                    <span className="list-item-name">{product.title}</span>
+                    <span className="list-item-sub">
+                        ${Number(product.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                    </span>
+                </div>
+                <span className="list-item-sub">{product.buyers.length} compradores</span>
+                <span className="list-item-sub">{totalUnits} unidades</span>
+                <span className="list-item-price">
+                    ${totalRevenue.toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                </span>
+                <span className={`list-item-badge ${product.stock > 0 ? 'badge-active' : 'badge-inactive'}`}>
+                    {product.stock > 0 ? `Stock: ${product.stock}` : 'Sin stock'}
+                </span>
+                {hasBuyers && <span>{expanded ? '▲' : '▼'}</span>}
+            </div>
+
+            {expanded && hasBuyers && (
+                <div style={{overflowX: 'auto'}}>
+                    <table style={{width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse'}}>
+                        <thead>
+                            <tr style={{textAlign: 'left', color: '#7a6e5f'}}>
+                                <th style={{padding: '0.3rem 0.6rem'}}>Comprador</th>
+                                <th style={{padding: '0.3rem 0.6rem'}}>Email</th>
+                                <th style={{padding: '0.3rem 0.6rem'}}>Cantidad</th>
+                                <th style={{padding: '0.3rem 0.6rem'}}>Total pagado</th>
+                                <th style={{padding: '0.3rem 0.6rem'}}>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {product.buyers.map((b, i) => (
+                                <tr key={i}>
+                                    <td style={{padding: '0.3rem 0.6rem'}}>{b.buyer_name}</td>
+                                    <td style={{padding: '0.3rem 0.6rem'}}>{b.buyer_email}</td>
+                                    <td style={{padding: '0.3rem 0.6rem'}}>{b.quantity}</td>
+                                    <td style={{padding: '0.3rem 0.6rem'}}>
+                                        ${Number(b.total_price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                                    </td>
+                                    <td style={{padding: '0.3rem 0.6rem'}}>
+                                        {new Date(b.bought_at).toLocaleDateString('es-MX')}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {!hasBuyers && (
+                <p className="list-item-sub" style={{margin: 0}}>Aún no hay compradores para este producto.</p>
+            )}
+        </div>
+    );
+}
+
+function MySales() {
+    const [sales, setSales] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getMySales()
+            .then(setSales)
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <SkeletonGrid count={4}/>;
+
+    if (sales.length === 0) return (<EmptyState
+        iconType="empty"
+        title="Aún no tienes productos publicados"
+        description="Publica tu primer producto y aquí verás tus ventas."
+        actionLabel="Publicar ahora"
+        onAction={() => window.location.href = '/productos'}
+    />);
+
+    const totalBuyers    = sales.reduce((s, p) => s + p.buyers.length, 0);
+    const totalRevenue   = sales.reduce((s, p) => s + p.buyers.reduce((a, b) => a + Number(b.total_price), 0), 0);
+    const totalUnitsSold = sales.reduce((s, p) => s + p.buyers.reduce((a, b) => a + Number(b.quantity), 0), 0);
+
+    return (<div className="cart-wrap">
+        <div className="cart-summary">
+            <span className="cart-total-label">{sales.length} productos · {totalBuyers} compras · {totalUnitsSold} unidades</span>
+            <span className="cart-total-label">Total recaudado</span>
+            <span className="cart-total">
+                ${totalRevenue.toLocaleString('es-MX', {minimumFractionDigits: 2})}
+            </span>
+        </div>
+        <div className="items-list">
+            {sales.map((product) => (<SalesProductCard key={product.slug} product={product}/>))}
+        </div>
     </div>);
 }
 
@@ -249,14 +358,21 @@ export default function ProfileView() {
         try {
             const u = await getMyProfile();
             setUser(u);
+        } catch {
+            setUser(null);
+            logout();
+            setLoading(false);
+            return;
+        }
+
+        try {
             const [listings, purchases] = await Promise.allSettled([getMyListings(), getMyPurchases()]);
             setCounts({
                 listings: listings.status === 'fulfilled' ? listings.value.length : 0,
                 purchases: purchases.status === 'fulfilled' ? purchases.value.length : 0,
             });
         } catch {
-            setUser(null);
-            logout();
+
         } finally {
             setLoading(false);
         }
@@ -308,6 +424,7 @@ export default function ProfileView() {
             {tab === 'info' && <ProfileInfo user={user} onUpdated={loadUser}/>}
             {tab === 'listings' && <MyListings/>}
             {tab === 'purchases' && <MyPurchases/>}
+            {tab === 'sales' && <MySales/>}
             {tab === 'cart' && <MyCart onCheckoutSuccess={loadUser}/>}
         </div>
     </div>);

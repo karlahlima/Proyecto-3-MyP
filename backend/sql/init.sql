@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   username      VARCHAR(50)   NOT NULL UNIQUE,
   age           INTEGER       NOT NULL CHECK (age >= 18),
   password_hash TEXT          NOT NULL,
+  avatar_url    TEXT,
   created_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS comments (
   id           SERIAL PRIMARY KEY,
   product_slug VARCHAR(255) NOT NULL REFERENCES products(slug) ON DELETE CASCADE,
   user_id      INTEGER      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  parent_id    INTEGER      REFERENCES comments(id) ON DELETE CASCADE,
   body         TEXT         NOT NULL,
   created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

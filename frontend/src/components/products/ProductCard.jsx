@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {useAuth} from '../../contexts/AuthContext';
 import CategoryIcon from '../CategoryIcon';
+import CommentsSection from './CommentsSection';
 
 export function labelCategory(cat) {
     if (!cat) return 'Otros';
@@ -120,6 +121,8 @@ export default function ProductCard({product, onRate, onAddCart, onDelete}) {
                     {added ? 'Agregado ✓' : (isAuthenticated ? 'Agregar al carrito' : 'Inicia sesión para comprar')}
                 </button>
             </div>
+
+            <CommentsSection productSlug={product.slug} />
         </article>
     );
 }

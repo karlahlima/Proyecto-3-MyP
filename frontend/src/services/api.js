@@ -27,11 +27,6 @@ export async function login({ email, password }) {
     });
 }
 
-/**
- * Función para registrar un usuario en el backend.
- *
- * @param param0 Objeto con los datos capturados para el registro de un usuario
- */
 export async function register({ name, email, username, age, password }) {
     return request('/auth/register', {
         method: 'POST',
@@ -81,19 +76,36 @@ export async function updateMyProfile(data) {
 }
 
 export async function uploadAvatar(file) {
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('avatar', file);
-    const res = await fetch(`${BASE_URL}/users/me/avatar`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            img.src = e.target.result;
+        };
+
+        img.onload = () => {
+            const MAX = 256;
+            const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+            const canvas = document.createElement('canvas');
+            canvas.width  = Math.round(img.width  * ratio);
+            canvas.height = Math.round(img.height * ratio);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            const base64 = canvas.toDataURL('image/jpeg', 0.82);
+
+            request('/users/me/avatar', {
+                method: 'POST',
+                body: JSON.stringify({ avatarBase64: base64 }),
+            })
+                .then(resolve)
+                .catch(reject);
+        };
+
+        img.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+        reader.onerror = () => reject(new Error('Error al leer el archivo.'));
+        reader.readAsDataURL(file);
     });
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }));
-        throw new Error(err.message ?? 'Error al subir imagen');
-    }
-    return res.json();
 }
 
 export async function getMyPurchases() {
@@ -102,6 +114,10 @@ export async function getMyPurchases() {
 
 export async function getMyListings() {
     return request('/users/me/listings');
+}
+
+export async function getMySales() {
+    return request('/users/me/sales');
 }
 
 // CARRITO
@@ -117,7 +133,6 @@ export async function addToCart(productSlug, quantity = 1) {
     });
 }
 
-// TODO: actualizar la UI al eliminar
 export async function removeFromCart(cartItemId) {
     return request(`/users/me/cart/${cartItemId}`, { method: 'DELETE' });
 }
@@ -135,15 +150,15 @@ export async function getComments(productSlug) {
     return request(`/products/${productSlug}/comments`);
 }
 
-export async function postComment(productSlug, body) {
+export async function postComment(productSlug, body, parentId = null) {
     return request(`/products/${productSlug}/comments`, {
         method: 'POST',
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body, ...(parentId != null ? { parent_id: parentId } : {}) }),
     });
 }
 
 export async function voteComment(commentId, useful) {
-    return request(`/comments/${commentId}/vote`, {
+    return request(`/products/comments/${commentId}/vote`, {
         method: 'POST',
         body: JSON.stringify({ useful }),
     });
