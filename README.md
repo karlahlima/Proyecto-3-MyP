@@ -2,6 +2,10 @@
 
 Plataforma de compraventa directa entre personas, sin intermediarios ni comisiones.
 
+## Reporte
+
+El reporte es de 5 páginas. El resto es un apéndice que se puede omitir.
+
 ## Requisitos
 
 - [Docker](https://www.docker.com/) y Docker Compose
