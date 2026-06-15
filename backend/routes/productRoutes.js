@@ -92,6 +92,23 @@ router.delete('/:slug', auth, asyncHandler(async (req, res) => {
         return res.status(403).json({ message: 'No autorizado.' });
     }
 
+    // Si el producto ya tiene compras asociadas, no se puede borrar físicamente
+    // porque purchases.product_slug referencia products.slug sin ON DELETE CASCADE.
+    // En su lugar, se oculta del catálogo poniendo stock = 0 (soft delete),
+    // así se conserva el historial de compras de los clientes.
+    const { rows: purchaseCheck } = await pool.query(
+        'SELECT 1 FROM purchases WHERE product_slug = $1 LIMIT 1',
+        [req.params.slug]
+    );
+
+    if (purchaseCheck.length > 0) {
+        await Product.update(req.params.slug, { stock: 0 });
+        return res.status(200).json({
+            message: 'El producto tiene compras registradas; se ocultó del catálogo en lugar de eliminarse.',
+            softDeleted: true,
+        });
+    }
+
     await Product.delete(req.params.slug);
     return res.status(204).send();
 }));

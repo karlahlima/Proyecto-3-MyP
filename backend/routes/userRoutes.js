@@ -80,7 +80,7 @@ router.post('/me/avatar', auth, asyncHandler(async (req, res) => {
 
 router.get('/me/purchases', auth, asyncHandler(async (req, res) => {
     const { rows } = await pool.query(
-        `SELECT p.*, pr.title, pr.price AS unit_price
+        `SELECT p.*, pr.title, pr.category, pr.price AS unit_price
          FROM purchases p
          JOIN products pr ON pr.slug = p.product_slug
          WHERE p.buyer_id = $1
