@@ -1,4 +1,4 @@
-# Tradinn (Actualizado hasta el 25/05)
+# Tradinn (Actualizado hasta el 14/06)
 
 Stack: 
 - Frontend: React + Vite
@@ -17,9 +17,3 @@ Stack:
 
 3. Para detener
 ```docker compose down```
-
-* Para correr en segundo plano: 
-```docker compose up --build```
-
-* Para borrar los datos de la db:
-```docker volume prune```
